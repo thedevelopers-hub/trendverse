@@ -1,0 +1,6 @@
+{
+  "name": "TRENDVERSE",
+  "description": "Discover What's Next. An international digital media platform covering technology, world affairs, finance, science, and free online utilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRENDVERSE — Discover What's Next | International Media &amp; Tools</title>
+    <meta
+      name="description"
+      content="TRENDVERSE delivers technology explainers, world affairs, business education, science discoveries, and free online utilities for global readers."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://trendverse.example.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TRENDVERSE" />
+    <meta property="og:title" content="TRENDVERSE — Discover What's Next" />
+    <meta
+      property="og:description"
+      content="International digital media covering technology, world affairs, business education, science discoveries, and free web tools."
+    />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TRENDVERSE — Discover What's Next" />
+    <meta
+      name="twitter:description"
+      content="International digital media covering technology, world affairs, business education, science discoveries, and free web tools."
+    />
+
+    <!-- Typography: Playfair Display + Plus Jakarta Sans + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <meta name="author" content="Vicky — Founder &amp; Developer, TRENDVERSE" />
+    <!-- Base Organization, Person (Founder) & WebSite Structured Data -->
+    <script type="application/ld+json" id="trendverse-base-schema">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "#founder-vicky",
+            "name": "Vicky",
+            "description": "Founder and Developer of TRENDVERSE."
+          },
+          {
+            "@type": "Organization",
+            "@id": "#organization",
+            "name": "TRENDVERSE",
+            "description": "Discover What's Next. An independent global digital platform founded and developed by Vicky.",
+            "slogan": "Discover What's Next.",
+            "founder": {
+              "@id": "#founder-vicky"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "#website",
+            "name": "TRENDVERSE",
+            "inLanguage": "en",
+            "publisher": {
+              "@id": "#organization"
+            },
+            "creator": {
+              "@id": "#founder-vicky"
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body class="bg-white text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

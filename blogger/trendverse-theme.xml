@@ -1,0 +1,936 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:css='false' b:defaultwidgetversion='2' b:layoutsVersion='3' b:responsive='true' expr:dir='data:blog.languageDirection' lang='en' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<head>
+  <meta charset='UTF-8'/>
+  <meta content='width=device-width, initial-scale=1.0' name='viewport'/>
+  <meta content='Vicky' name='author'/>
+  <meta content='#0b1324' name='theme-color'/>
+
+  <!-- Dynamic SEO Titles (Uses data:view.isHomepage, never pageType=='index' alone) -->
+  <b:if cond='data:view.isError'>
+    <title>Page Not Found (404) &#8212; <data:blog.title/></title>
+  <b:elseif cond='data:view.isHomepage'/>
+    <title><data:blog.title/> &#8212; Discover What&#39;s Next</title>
+  <b:elseif cond='data:view.isLabelSearch'/>
+    <title><data:blog.searchLabel/> &#8212; <data:blog.title/></title>
+  <b:elseif cond='data:blog.searchQuery'/>
+    <title>Search: <data:blog.searchQuery/> &#8212; <data:blog.title/></title>
+  <b:elseif cond='data:view.isArchive'/>
+    <title>Archive: <data:blog.pageName/> &#8212; <data:blog.title/></title>
+  <b:else/>
+    <title><data:blog.pageName/> &#8212; <data:blog.title/></title>
+  </b:if>
+
+  <!-- Meta Description -->
+  <b:if cond='data:blog.metaDescription'>
+    <meta expr:content='data:blog.metaDescription' name='description'/>
+  <b:else/>
+    <meta content='TRENDVERSE is an independent global digital platform founded and developed by Vicky covering global news, technology, artificial intelligence, science, careers, and free online tools.' name='description'/>
+  </b:if>
+
+  <!-- Canonical & Smart Robots Directives (Prevents search/archive/404 index bloat) -->
+  <b:if cond='!data:view.isError'>
+    <link expr:href='data:blog.canonicalUrl' rel='canonical'/>
+  </b:if>
+  <b:if cond='data:blog.searchQuery or data:view.isArchive or data:view.isError'>
+    <meta content='noindex, follow' name='robots'/>
+  <b:else/>
+    <meta content='index, follow, max-image-preview:large' name='robots'/>
+  </b:if>
+
+  <!-- Blogger Feed Auto-Discovery & Favicon -->
+  <link expr:href='data:blog.homepageUrl + &quot;favicon.ico&quot;' rel='icon' type='image/x-icon'/>
+  <link expr:href='data:blog.homepageUrl + &quot;feeds/posts/default&quot;' rel='alternate' title='TRENDVERSE - Atom' type='application/atom+xml'/>
+  <link expr:href='data:blog.homepageUrl + &quot;feeds/posts/default?alt=rss&quot;' rel='alternate' title='TRENDVERSE - RSS' type='application/rss+xml'/>
+
+  <!-- Open Graph Metadata -->
+  <meta content='en_US' property='og:locale'/>
+  <meta expr:content='data:blog.title' property='og:site_name'/>
+  <b:if cond='!data:view.isError'>
+    <meta expr:content='data:blog.canonicalUrl' property='og:url'/>
+  </b:if>
+  <b:if cond='data:view.isPost'>
+    <meta content='article' property='og:type'/>
+    <meta expr:content='data:blog.pageName' property='og:title'/>
+  <b:else/>
+    <meta content='website' property='og:type'/>
+    <meta expr:content='data:blog.pageTitle' property='og:title'/>
+  </b:if>
+  <b:if cond='data:blog.metaDescription'>
+    <meta expr:content='data:blog.metaDescription' property='og:description'/>
+  <b:else/>
+    <meta content='Discover What&#39;s Next. Global news, emerging trends, AI, careers, and educational resources.' property='og:description'/>
+  </b:if>
+  <b:if cond='data:blog.postImageUrl'>
+    <meta expr:content='data:blog.postImageUrl' property='og:image'/>
+    <meta expr:content='data:blog.pageName' property='og:image:alt'/>
+  </b:if>
+
+  <!-- Twitter / X Card -->
+  <meta content='summary_large_image' name='twitter:card'/>
+  <b:if cond='data:view.isPost'>
+    <meta expr:content='data:blog.pageName' name='twitter:title'/>
+  <b:else/>
+    <meta expr:content='data:blog.pageTitle' name='twitter:title'/>
+  </b:if>
+  <b:if cond='data:blog.metaDescription'>
+    <meta expr:content='data:blog.metaDescription' name='twitter:description'/>
+  <b:else/>
+    <meta content='Discover What&#39;s Next. Global news, emerging trends, AI, careers, and educational resources.' name='twitter:description'/>
+  </b:if>
+  <b:if cond='data:blog.postImageUrl'>
+    <meta expr:content='data:blog.postImageUrl' name='twitter:image'/>
+  </b:if>
+
+  <!-- Typography -->
+  <link href='https://fonts.googleapis.com' rel='preconnect'/>
+  <link crossorigin='anonymous' href='https://fonts.gstatic.com' rel='preconnect'/>
+  <link href='https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Playfair+Display:wght@500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap' rel='stylesheet'/>
+
+  <!-- Organization, Founder (Person: Vicky), WebSite & WebPage JSON-LD -->
+  <script type='application/ld+json'>
+    {
+      &quot;@context&quot;: &quot;https://schema.org&quot;,
+      &quot;@graph&quot;: [
+        {
+          &quot;@type&quot;: &quot;Organization&quot;,
+          &quot;@id&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>#organization&quot;,
+          &quot;name&quot;: &quot;TRENDVERSE&quot;,
+          &quot;slogan&quot;: &quot;Discover What's Next.&quot;,
+          &quot;url&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>&quot;,
+          &quot;founder&quot;: {
+            &quot;@id&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>#founder-vicky&quot;
+          }
+        },
+        {
+          &quot;@type&quot;: &quot;Person&quot;,
+          &quot;@id&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>#founder-vicky&quot;,
+          &quot;name&quot;: &quot;Vicky&quot;,
+          &quot;jobTitle&quot;: &quot;Founder &amp; Developer&quot;,
+          &quot;worksFor&quot;: {
+            &quot;@id&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>#organization&quot;
+          }
+        },
+        {
+          &quot;@type&quot;: &quot;WebSite&quot;,
+          &quot;@id&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>#website&quot;,
+          &quot;name&quot;: &quot;<data:blog.title.jsonEscaped/>&quot;,
+          &quot;url&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>&quot;,
+          &quot;creator&quot;: {
+            &quot;@id&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>#founder-vicky&quot;
+          },
+          &quot;potentialAction&quot;: {
+            &quot;@type&quot;: &quot;SearchAction&quot;,
+            &quot;target&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>search?q={search_term_string}&quot;,
+            &quot;query-input&quot;: &quot;required name=search_term_string&quot;
+          }
+        },
+        {
+          &quot;@type&quot;: &quot;WebPage&quot;,
+          &quot;url&quot;: &quot;<data:blog.canonicalUrl.jsonEscaped/>&quot;,
+          &quot;name&quot;: &quot;<data:blog.pageTitle.jsonEscaped/>&quot;,
+          &quot;inLanguage&quot;: &quot;en&quot;,
+          &quot;isPartOf&quot;: {
+            &quot;@id&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>#website&quot;
+          }
+        }
+      ]
+    }
+  </script>
+
+  <!-- Standalone Embedded Stylesheet (mirrors blogger/trendverse-theme.css for instant zero-config Blogger deployment) -->
+  <b:skin><![CDATA[
+    :root {
+      --tv-navy-950: #060b16;
+      --tv-navy-900: #0b1324;
+      --tv-navy-800: #13203b;
+      --tv-blue-600: #2563eb;
+      --tv-ink: #0f172a;
+      --tv-muted: #475569;
+      --tv-subtle: #475569;
+      --tv-border: #e2e8f0;
+      --tv-surface: #f8fafc;
+      --tv-white: #ffffff;
+      --tv-font-display: "Playfair Display", Georgia, serif;
+      --tv-font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --tv-font-mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: var(--tv-font-sans); color: var(--tv-ink); background: var(--tv-white); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; height: auto; display: block; }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--tv-blue-600); outline-offset: 2px; }
+    .tv-skip-link { position: absolute; left: -9999px; top: 8px; z-index: 100; background: #2563eb; color: #ffffff; padding: 10px 16px; border-radius: 6px; font-weight: 600; font-size: 0.875rem; }
+    .tv-skip-link:focus { left: 16px; }
+    .tv-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    .tv-header { position: sticky; top: 0; z-index: 50; background: rgba(11, 19, 36, 0.97); border-bottom: 1px solid rgba(255,255,255,0.1); color: #ffffff; }
+    .tv-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 66px; }
+    .tv-brand-wrap { display: flex; flex-direction: column; flex-shrink: 0; }
+    .tv-brand { font-family: var(--tv-font-display); font-size: 1.375rem; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; line-height: 1.1; }
+    .tv-tagline { font-size: 0.6875rem; color: #93c5fd; letter-spacing: 0.04em; white-space: nowrap; }
+    .tv-nav { display: flex; align-items: center; gap: 16px; overflow-x: auto; }
+    .tv-nav a { font-size: 0.875rem; font-weight: 500; color: #cbd5e1; white-space: nowrap; padding: 6px 0; }
+    .tv-nav a:hover { color: #ffffff; text-decoration: underline; text-underline-offset: 6px; }
+    .tv-mobile-search { display: none; width: 100%; margin-top: 8px; }
+    .tv-header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .tv-search-form { display: flex; align-items: center; gap: 6px; background: #13203b; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 4px 8px; }
+    .tv-search-form input { background: transparent; border: 0; color: #ffffff; font-size: 0.875rem; width: 145px; outline: none; }
+    .tv-search-form input::placeholder { color: #cbd5e1; }
+    .tv-search-form button { background: #2563eb; color: #ffffff; border: 0; border-radius: 6px; padding: 6px 12px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+    .tv-404-search { display: flex; align-items: center; gap: 8px; background: #13203b; border: 1px solid rgba(255,255,255,0.22); border-radius: 8px; padding: 6px 10px; max-width: 400px; }
+    .tv-404-search input { background: transparent; border: 0; color: #ffffff; font-size: 0.875rem; width: 100%; outline: none; }
+    .tv-404-search input::placeholder { color: #cbd5e1; }
+    .tv-404-search button { background: #2563eb; color: #ffffff; border: 0; border-radius: 6px; padding: 7px 14px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+    .tv-menu-toggle { display: none; background: transparent; border: 1px solid rgba(255,255,255,0.28); color: #ffffff; border-radius: 8px; padding: 7px 12px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+    .tv-hero-banner { background: linear-gradient(135deg, #060b16 0%, #0b1324 65%, #13203b 100%); color: #ffffff; padding: 42px 0; border-bottom: 1px solid #1e293b; }
+    .tv-hero-kicker { display: inline-block; font-family: var(--tv-font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: #93c5fd; margin-bottom: 10px; }
+    .tv-hero-banner h1 { font-family: var(--tv-font-display); font-size: clamp(2rem, 4vw, 3rem); line-height: 1.15; margin: 0 0 10px; }
+    .tv-hero-banner p { margin: 0; color: #cbd5e1; max-width: 64ch; }
+    .tv-hero-topics { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .tv-hero-topics a { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 6px 12px; font-size: 0.8125rem; color: #e2e8f0; }
+    .tv-hero-topics a:hover { background: #2563eb; border-color: #2563eb; color: #ffffff; }
+    .tv-clock-bar { background: #060b16; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.1); font-family: var(--tv-font-mono); font-size: 0.75rem; padding: 8px 0; }
+    .tv-clock-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+    .tv-clock-cities { display: flex; flex-wrap: wrap; gap: 14px; }
+    .tv-home-desks { background: #f8fafc; border-bottom: 1px solid var(--tv-border); padding: 28px 0; }
+    .tv-home-desk-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .tv-desk-card { background: #ffffff; border: 1px solid var(--tv-border); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; }
+    .tv-desk-card h2 { font-family: var(--tv-font-display); font-size: 1.125rem; margin: 0 0 6px; color: var(--tv-ink); }
+    .tv-desk-card p { font-size: 0.875rem; color: var(--tv-muted); margin: 0 0 12px; }
+    .tv-section-heading { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--tv-border); padding-bottom: 10px; margin-bottom: 22px; }
+    .tv-section-heading h2 { font-family: var(--tv-font-display); font-size: 1.5rem; margin: 0; }
+    .tv-status-banner { background: var(--tv-surface); border: 1px solid var(--tv-border); border-left: 4px solid var(--tv-blue-600); border-radius: 10px; padding: 18px 20px; margin-bottom: 24px; }
+    .tv-status-banner h1 { font-family: var(--tv-font-display); font-size: 1.5rem; margin: 0 0 4px; }
+    .tv-status-banner p { margin: 0; font-size: 0.9375rem; color: var(--tv-muted); }
+    .tv-main { padding: 36px 0 64px; }
+    .tv-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: start; }
+    .tv-post-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+    .tv-card { border: 1px solid var(--tv-border); border-radius: 10px; overflow: hidden; background: #ffffff; display: flex; flex-direction: column; }
+    .tv-card-media { aspect-ratio: 16 / 10; background: linear-gradient(135deg, #060b16 0%, #0b1324 70%, #1e3a8a 100%); overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+    .tv-card-media img { width: 100%; height: 100%; object-fit: cover; }
+    .tv-card-media-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 16px; color: #cbd5e1; width: 100%; height: 100%; }
+    .tv-card-media.is-fallback .tv-card-media-fallback { display: flex; }
+    .tv-card-media-brand { font-family: var(--tv-font-display); font-size: 1.125rem; font-weight: 700; color: #ffffff; letter-spacing: 0.06em; }
+    .tv-card-media-cat { font-family: var(--tv-font-mono); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em; color: #93c5fd; margin-top: 4px; }
+    .tv-card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+    .tv-meta-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--tv-subtle); margin-bottom: 10px; }
+    .tv-cat-badge { color: #1d4ed8; font-weight: 600; }
+    .tv-card-title { font-family: var(--tv-font-display); font-size: 1.35rem; line-height: 1.28; margin: 0 0 10px; color: var(--tv-ink); }
+    .tv-card-excerpt { font-size: 0.9375rem; color: var(--tv-muted); margin: 0 0 16px; flex: 1; }
+    .tv-read-link { font-size: 0.875rem; font-weight: 600; color: #1d4ed8; }
+    .tv-breadcrumb { font-size: 0.8125rem; color: var(--tv-subtle); margin-bottom: 16px; }
+    .tv-article-title { font-family: var(--tv-font-display); font-size: clamp(2rem, 3.6vw, 2.85rem); line-height: 1.15; margin: 0 0 14px; }
+    .tv-article-byline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 0 18px; margin-bottom: 22px; border-bottom: 1px solid var(--tv-border); font-size: 0.8125rem; color: var(--tv-muted); }
+    .tv-article-cover { aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: #0b1324; margin-bottom: 24px; }
+    .tv-article-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .tv-toc { background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: 10px; padding: 18px 20px; margin: 24px 0; }
+    .tv-toc h2 { font-size: 0.9375rem; margin: 0 0 10px; }
+    .tv-toc ul { margin: 0; padding-left: 18px; }
+    .tv-toc li { margin-bottom: 6px; font-size: 0.875rem; color: #1d4ed8; }
+    .tv-article-body { max-width: 68ch; font-size: 1.0625rem; line-height: 1.8; overflow-wrap: break-word; }
+    .tv-article-body h2, .tv-article-body h3 { font-family: var(--tv-font-display); margin-top: 2rem; line-height: 1.28; }
+    .tv-article-body a { color: #1d4ed8; text-decoration: underline; }
+    .tv-labels-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .tv-label-link { border: 1px solid var(--tv-border); background: var(--tv-surface); border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; color: var(--tv-muted); }
+    .tv-share-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--tv-border); }
+    .tv-share-btn { display: inline-flex; align-items: center; padding: 8px 14px; border: 1px solid #cbd5e1; background: #ffffff; border-radius: 8px; font-size: 0.8125rem; font-weight: 600; color: var(--tv-ink); cursor: pointer; }
+    .tv-author-card { display: flex; gap: 16px; align-items: flex-start; border: 1px solid var(--tv-border); background: var(--tv-surface); border-radius: 10px; padding: 20px; margin-top: 28px; }
+    .tv-author-badge { width: 52px; height: 52px; border-radius: 10px; background: #0b1324; color: #ffffff; font-family: var(--tv-font-display); font-size: 1.375rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tv-author-card h3 { margin: 0 0 4px; font-size: 1rem; }
+    .tv-author-card p { margin: 0 0 8px; font-size: 0.875rem; color: var(--tv-muted); }
+    .tv-author-links { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.8125rem; font-weight: 600; color: #1d4ed8; }
+    .tv-404-card { background: #0b1324; color: #ffffff; border-radius: 12px; padding: 40px 28px; }
+    .tv-404-code { font-family: var(--tv-font-mono); font-size: 0.875rem; color: #93c5fd; margin-bottom: 8px; }
+    .tv-404-card h1 { font-family: var(--tv-font-display); font-size: clamp(1.75rem, 3vw, 2.5rem); margin: 0 0 12px; }
+    .tv-404-card p { color: #cbd5e1; max-width: 58ch; margin: 0 0 24px; }
+    .tv-404-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+    .tv-btn-primary { background: #2563eb; color: #ffffff; border-radius: 8px; padding: 10px 18px; font-size: 0.875rem; font-weight: 600; }
+    .tv-ad-slot { min-height: 100px; margin: 28px 0; padding: 12px; background: var(--tv-surface); border: 1px solid var(--tv-border); border-radius: 8px; text-align: center; }
+    .tv-inarticle-ad { min-height: 120px; }
+    .tv-ad-label { display: block; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tv-subtle); margin-bottom: 6px; }
+    .tv-sidebar-box { border: 1px solid var(--tv-border); border-radius: 10px; padding: 20px; margin-bottom: 24px; background: #ffffff; }
+    .tv-sidebar-box h2, .tv-sidebar-box h3 { font-size: 1rem; margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--tv-border); }
+    .tv-sidebar-box .widget-content ul { margin: 0; padding-left: 18px; }
+    .tv-sidebar-box ul { margin: 0; padding-left: 18px; }
+    .tv-sidebar-box li { margin-bottom: 8px; font-size: 0.875rem; color: var(--tv-muted); }
+    .tv-pagination { display: flex; justify-content: space-between; margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--tv-border); font-weight: 600; color: #1d4ed8; }
+    .tv-footer { background: #060b16; color: #cbd5e1; padding: 48px 0 32px; margin-top: 48px; }
+    .tv-footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+    .tv-footer h4 { color: #ffffff; margin: 0 0 12px; font-size: 0.9375rem; }
+    .tv-footer ul { list-style: none; padding: 0; margin: 0; }
+    .tv-footer li { margin-bottom: 8px; font-size: 0.875rem; }
+    .tv-footer-bottom { margin-top: 32px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 0.8125rem; color: #cbd5e1; }
+    @media (max-width: 1024px) { .tv-search-form input { width: 120px; } .tv-nav { gap: 12px; } }
+    @media (max-width: 960px) { .tv-layout, .tv-post-grid, .tv-home-desk-grid { grid-template-columns: 1fr; } .tv-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 768px) {
+      .tv-nav { display: none; }
+      .tv-nav.is-open { display: flex; flex-direction: column; align-items: stretch; position: absolute; top: 66px; left: 0; right: 0; background: #0b1324; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); z-index: 60; box-shadow: 0 12px 24px rgba(0,0,0,0.35); }
+      .tv-nav.is-open .tv-mobile-search { display: flex; }
+      .tv-nav.is-open .tv-mobile-search input { width: 100%; }
+      .tv-menu-toggle { display: inline-flex; align-items: center; }
+      .tv-header-actions .tv-search-form { display: none; }
+      .tv-footer-grid { grid-template-columns: 1fr; }
+      .tv-author-card { flex-direction: column; }
+    }
+  ]]></b:skin>
+</head>
+<body>
+  <a class='tv-skip-link' href='#main-content'>Skip to main content</a>
+
+  <!-- Sticky 3-Zone Editorial Header -->
+  <header class='tv-header'>
+    <div class='tv-container tv-header-inner'>
+      <div class='tv-brand-wrap'>
+        <a class='tv-brand' expr:href='data:blog.homepageUrl'><data:blog.title/></a>
+        <span class='tv-tagline'>Discover What&#39;s Next.</span>
+      </div>
+
+      <nav aria-label='Primary Navigation' class='tv-nav' id='tv-primary-nav'>
+        <a href='/search/label/Technology%20%26%20AI'>Tech &amp; AI</a>
+        <a href='/search/label/World'>World</a>
+        <a href='/search/label/Business%20%26%20Finance'>Business</a>
+        <a href='/search/label/Science%20%26%20Space'>Science &amp; Space</a>
+        <a href='/search/label/Careers'>Careers</a>
+        <a href='/p/free-tools.html'>Free Tools</a>
+        <form action='/search' class='tv-search-form tv-mobile-search' method='get' role='search'>
+          <input aria-label='Search TRENDVERSE articles on mobile' name='q' placeholder='Search TRENDVERSE...' required='required' type='search'/>
+          <button type='submit'>Search</button>
+        </form>
+      </nav>
+
+      <div class='tv-header-actions'>
+        <form action='/search' class='tv-search-form' method='get' role='search'>
+          <input aria-label='Search TRENDVERSE articles' name='q' placeholder='Search TRENDVERSE...' required='required' type='search'/>
+          <button type='submit'>Search</button>
+        </form>
+        <button aria-controls='tv-primary-nav' aria-expanded='false' aria-label='Toggle navigation menu' class='tv-menu-toggle' id='tv-menu-toggle' type='button'>Menu</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Custom Homepage Landing Experience (Strictly data:view.isHomepage Only) -->
+  <b:if cond='data:view.isHomepage'>
+    <div aria-label='World Clock Bar' class='tv-clock-bar'>
+      <div class='tv-container tv-clock-inner'>
+        <span id='tv-live-date'>TRENDVERSE GLOBAL DESK</span>
+        <div class='tv-clock-cities' id='tv-live-clocks'>
+          <span>NYC: --:--</span>
+          <span>LON: --:--</span>
+          <span>DEL: --:--</span>
+          <span>TYO: --:--</span>
+        </div>
+      </div>
+    </div>
+
+    <section class='tv-hero-banner'>
+      <div class='tv-container'>
+        <span class='tv-hero-kicker'>Global Digital Media &#183; Founded by Vicky</span>
+        <h1>Discover What&#39;s Next.</h1>
+        <p>Independent international coverage across technology, artificial intelligence, world affairs, careers, scholarships, science discoveries, and practical digital utilities.</p>
+        <div class='tv-hero-topics'>
+          <a href='/search/label/Technology%20%26%20AI'>Technology &amp; AI</a>
+          <a href='/search/label/World'>World Affairs</a>
+          <a href='/search/label/Business%20%26%20Finance'>Business &amp; Finance</a>
+          <a href='/search/label/Science%20%26%20Space'>Science &amp; Space</a>
+          <a href='/search/label/Careers'>Careers &amp; Internships</a>
+          <a href='/search/label/Scholarships'>Scholarships</a>
+          <a href='/p/free-tools.html'>Free Online Tools</a>
+        </div>
+      </div>
+    </section>
+
+    <section aria-label='TRENDVERSE Discovery Desks' class='tv-home-desks'>
+      <div class='tv-container'>
+        <div class='tv-home-desk-grid'>
+          <div class='tv-desk-card'>
+            <div>
+              <h2>Global Newsroom &amp; World</h2>
+              <p>Verified dispatches on global logistics, diplomacy, technology, science, and climate.</p>
+            </div>
+            <a class='tv-read-link' href='/search/label/World'>Explore World Desk &#8594;</a>
+          </div>
+          <div class='tv-desk-card'>
+            <div>
+              <h2>AI &amp; Technology Intelligence</h2>
+              <p>Research explainers, computing architecture, and practical artificial intelligence coverage.</p>
+            </div>
+            <a class='tv-read-link' href='/search/label/Technology%20%26%20AI'>Explore Tech &amp; AI &#8594;</a>
+          </div>
+          <div class='tv-desk-card'>
+            <div>
+              <h2>Careers, Scholarships &amp; Tools</h2>
+              <p>Student internships, remote opportunities, official recruitment guides, and free calculators.</p>
+            </div>
+            <a class='tv-read-link' href='/search/label/Careers'>Explore Careers &amp; Tools &#8594;</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </b:if>
+
+  <!-- Reserved Header Leaderboard Ad Slot (Zero CLS) -->
+  <b:if cond='!data:view.isError'>
+    <div class='tv-container'>
+      <div class='tv-ad-slot'>
+        <span class='tv-ad-label'>Advertisement</span>
+        <b:section id='header-ad-slot' maxwidgets='1' showaddelement='yes'/>
+      </div>
+    </div>
+  </b:if>
+
+  <!-- Main Content + Sidebar -->
+  <main class='tv-main tv-container' id='main-content'>
+    <div class='tv-layout'>
+      <section aria-label='Editorial Content'>
+        <b:section id='main-blog' maxwidgets='1' showaddelement='no'>
+          <b:widget id='Blog1' locked='true' title='Blog Posts' type='Blog' version='2'>
+            <b:includable id='main' var='top'>
+
+              <!-- Custom 404 Error Page -->
+              <b:if cond='data:view.isError'>
+                <div class='tv-404-card'>
+                  <div class='tv-404-code'>HTTP 404 &#183; PAGE NOT FOUND</div>
+                  <h1>We couldn&#39;t find that TRENDVERSE page.</h1>
+                  <p>The article, career guide, or static resource may have moved or its URL may have changed. Search below or jump back to a primary desk.</p>
+                  <div class='tv-404-actions'>
+                    <a class='tv-btn-primary' expr:href='data:blog.homepageUrl'>Return to Homepage</a>
+                    <a class='tv-share-btn' href='/p/about.html'>About TRENDVERSE</a>
+                  </div>
+                  <form action='/search' class='tv-404-search' method='get' role='search'>
+                    <input aria-label='Search TRENDVERSE' name='q' placeholder='Search topics, careers, tools...' required='required' type='search'/>
+                    <button type='submit'>Search</button>
+                  </form>
+                </div>
+
+              <!-- Single Post or Static Page View -->
+              <b:elseif cond='data:view.isPost or data:view.isPage'/>
+                <b:loop values='data:posts' var='post'>
+                  <article>
+                    <b:if cond='data:view.isPost'>
+                      <script type='application/ld+json'>
+                        {
+                          &quot;@context&quot;: &quot;https://schema.org&quot;,
+                          &quot;@graph&quot;: [
+                            {
+                              &quot;@type&quot;: &quot;Article&quot;,
+                              &quot;headline&quot;: &quot;<data:post.title.jsonEscaped/>&quot;,
+                              &quot;description&quot;: &quot;<data:post.snippets.short.jsonEscaped/>&quot;,
+                              <b:if cond='data:post.featuredImage'>
+                              &quot;image&quot;: [&quot;<data:post.featuredImage.jsonEscaped/>&quot;],
+                              </b:if>
+                              &quot;datePublished&quot;: &quot;<data:post.date.iso8601/>&quot;,
+                              &quot;dateModified&quot;: &quot;<data:post.date.iso8601/>&quot;,
+                              &quot;inLanguage&quot;: &quot;en&quot;,
+                              &quot;author&quot;: {
+                                &quot;@type&quot;: &quot;Person&quot;,
+                                &quot;name&quot;: &quot;<b:if cond='data:post.author and data:post.author.name'><data:post.author.name.jsonEscaped/><b:else/>TRENDVERSE Editorial Team</b:if>&quot;
+                              },
+                              &quot;publisher&quot;: {
+                                &quot;@type&quot;: &quot;Organization&quot;,
+                                &quot;@id&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>#organization&quot;,
+                                &quot;name&quot;: &quot;TRENDVERSE&quot;,
+                                &quot;founder&quot;: { &quot;@type&quot;: &quot;Person&quot;, &quot;name&quot;: &quot;Vicky&quot; }
+                              },
+                              &quot;mainEntityOfPage&quot;: &quot;<data:post.url.jsonEscaped/>&quot;
+                            },
+                            {
+                              &quot;@type&quot;: &quot;BreadcrumbList&quot;,
+                              &quot;itemListElement&quot;: [
+                                {
+                                  &quot;@type&quot;: &quot;ListItem&quot;,
+                                  &quot;position&quot;: 1,
+                                  &quot;name&quot;: &quot;Home&quot;,
+                                  &quot;item&quot;: &quot;<data:blog.homepageUrl.jsonEscaped/>&quot;
+                                },
+                                <b:if cond='data:post.labels'>
+                                {
+                                  &quot;@type&quot;: &quot;ListItem&quot;,
+                                  &quot;position&quot;: 2,
+                                  &quot;name&quot;: &quot;<data:post.labels.first.name.jsonEscaped/>&quot;,
+                                  &quot;item&quot;: &quot;<data:post.labels.first.url.jsonEscaped/>&quot;
+                                },
+                                {
+                                  &quot;@type&quot;: &quot;ListItem&quot;,
+                                  &quot;position&quot;: 3,
+                                  &quot;name&quot;: &quot;<data:post.title.jsonEscaped/>&quot;,
+                                  &quot;item&quot;: &quot;<data:post.url.jsonEscaped/>&quot;
+                                }
+                                <b:else/>
+                                {
+                                  &quot;@type&quot;: &quot;ListItem&quot;,
+                                  &quot;position&quot;: 2,
+                                  &quot;name&quot;: &quot;<data:post.title.jsonEscaped/>&quot;,
+                                  &quot;item&quot;: &quot;<data:post.url.jsonEscaped/>&quot;
+                                }
+                                </b:if>
+                              ]
+                            }
+                          ]
+                        }
+                      </script>
+                    </b:if>
+
+                    <nav aria-label='Breadcrumb' class='tv-breadcrumb'>
+                      <a expr:href='data:blog.homepageUrl'>Home</a> /
+                      <b:if cond='data:post.labels'>
+                        <a expr:href='data:post.labels.first.url'><data:post.labels.first.name/></a> /
+                      </b:if>
+                      <span><data:post.title/></span>
+                    </nav>
+
+                    <h1 class='tv-article-title'><data:post.title/></h1>
+
+                    <div class='tv-article-byline'>
+                      <span>By <strong><b:if cond='data:post.author and data:post.author.name'><data:post.author.name/><b:else/>TRENDVERSE Editorial Team</b:if></strong></span>
+                      <span>&#183;</span>
+                      <span>Publisher: TRENDVERSE Editorial Team</span>
+                      <span>&#183;</span>
+                      <span>Founded by Vicky</span>
+                      <span>&#183;</span>
+                      <time expr:datetime='data:post.date.iso8601'><data:post.date/></time>
+                    </div>
+
+                    <b:if cond='data:post.featuredImage'>
+                      <div class='tv-article-cover' id='tv-article-cover'>
+                        <img decoding='async' expr:alt='data:post.title' expr:src='data:post.featuredImage' fetchpriority='high' loading='eager' onerror='this.parentElement.style.display=&quot;none&quot;;'/>
+                      </div>
+                    </b:if>
+
+                    <div class='tv-toc' hidden='hidden' id='tv-toc-box'>
+                      <h2>Table of Contents</h2>
+                      <ul id='tv-toc-list'/>
+                    </div>
+
+                    <div class='tv-article-body' id='tv-article-body'>
+                      <data:post.body/>
+                    </div>
+
+                    <!-- Reserved Editable In-Article Ad Slot on Posts Only (Zero CLS) -->
+                    <b:if cond='data:view.isPost'>
+                      <div class='tv-ad-slot tv-inarticle-ad'>
+                        <span class='tv-ad-label'>Advertisement</span>
+                        <b:section id='inarticle-ad-slot' maxwidgets='1' showaddelement='yes'/>
+                      </div>
+                    </b:if>
+
+                    <b:if cond='data:post.labels'>
+                      <div class='tv-labels-row'>
+                        <b:loop values='data:post.labels' var='label'>
+                          <a class='tv-label-link' expr:href='data:label.url'><data:label.name/></a>
+                        </b:loop>
+                      </div>
+                    </b:if>
+
+                    <!-- Share Bar -->
+                    <div class='tv-share-bar'>
+                      <button class='tv-share-btn' id='tv-copy-link' type='button'>Copy Link</button>
+                      <a aria-label='Share this article on X' class='tv-share-btn' href='https://twitter.com/intent/tweet' id='tv-share-x' rel='noopener noreferrer' target='_blank'>Share on X</a>
+                      <a aria-label='Share this article on LinkedIn' class='tv-share-btn' href='https://www.linkedin.com/' id='tv-share-linkedin' rel='noopener noreferrer' target='_blank'>LinkedIn</a>
+                      <a aria-label='Share this article on WhatsApp' class='tv-share-btn' href='https://api.whatsapp.com/' id='tv-share-whatsapp' rel='noopener noreferrer' target='_blank'>WhatsApp</a>
+                    </div>
+
+                    <!-- Founder & Publisher Attribution Card -->
+                    <div class='tv-author-card'>
+                      <div aria-hidden='true' class='tv-author-badge'>V</div>
+                      <div>
+                        <h3>TRENDVERSE Editorial Team &#183; Founded by Vicky</h3>
+                        <p>TRENDVERSE is an independent global digital platform founded and developed by Vicky to make global news, emerging trends, AI, career opportunities, and educational resources accessible worldwide.</p>
+                        <div class='tv-author-links'>
+                          <a href='/p/about.html'>About Founder &amp; Platform</a>
+                          <a href='/p/editorial-policy.html'>Editorial Policy</a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Related Articles via Blogger JSONP Feed (Posts with Labels Only) -->
+                    <b:if cond='data:view.isPost and data:post.labels'>
+                      <div class='tv-sidebar-box' hidden='hidden' id='tv-related-posts' style='margin-top: 28px;' expr:data-current-url='data:post.url' expr:data-label='data:post.labels.first.name'>
+                        <h3>Related Articles</h3>
+                        <ul id='tv-related-list'/>
+                      </div>
+                    </b:if>
+
+                    <!-- Native Blogger Comments Section -->
+                    <b:if cond='data:view.isPost and data:post.allowComments'>
+                      <div class='tv-sidebar-box' id='comments' style='margin-top: 24px;'>
+                        <h3>Reader Discussion (<data:post.numComments/>)</h3>
+                        <b:if cond='data:post.comments'>
+                          <ul>
+                            <b:loop values='data:post.comments' var='comment'>
+                              <li style='margin-bottom: 12px;'>
+                                <strong><data:comment.author/></strong>
+                                <b:if cond='data:comment.timestamp'>
+                                  <span style='font-size: 0.75rem; color: #475569;'> &#183; <data:comment.timestamp/></span>
+                                </b:if>
+                                <div><data:comment.body/></div>
+                              </li>
+                            </b:loop>
+                          </ul>
+                        <b:else/>
+                          <p style='margin: 0 0 12px; font-size: 0.875rem; color: #475569;'>Reader comments are moderated per TRENDVERSE editorial guidelines.</p>
+                        </b:if>
+                        <b:if cond='data:post.allowNewComments and data:post.addCommentUrl'>
+                          <a class='tv-share-btn' expr:href='data:post.addCommentUrl' rel='nofollow'>Post a Comment</a>
+                        </b:if>
+                      </div>
+                    </b:if>
+                  </article>
+                </b:loop>
+
+              <!-- Homepage, Category Label, Search & Archive Index Views (Strictly Separated) -->
+              <b:else/>
+                <b:if cond='data:blog.searchQuery'>
+                  <div class='tv-status-banner'>
+                    <h1>Search Results for &#8220;<data:blog.searchQuery/>&#8221;</h1>
+                    <p>Showing matching dispatches and guides across TRENDVERSE.</p>
+                  </div>
+                <b:elseif cond='data:view.isLabelSearch'/>
+                  <div class='tv-status-banner'>
+                    <h1>Topic: <data:blog.searchLabel/></h1>
+                    <p>Latest explainers, coverage, and guides filed under <data:blog.searchLabel/>.</p>
+                  </div>
+                <b:elseif cond='data:view.isArchive'/>
+                  <div class='tv-status-banner'>
+                    <h1>Editorial Archive: <data:blog.pageName/></h1>
+                    <p>Chronological publication record from TRENDVERSE.</p>
+                  </div>
+                <b:elseif cond='data:view.isHomepage'/>
+                  <div class='tv-section-heading'>
+                    <h2>Latest Stories</h2>
+                    <a class='tv-read-link' href='/search/label/World'>Browse World Archive &#8594;</a>
+                  </div>
+                </b:if>
+
+                <div class='tv-post-grid'>
+                  <b:loop values='data:posts' var='post'>
+                    <article class='tv-card'>
+                      <b:if cond='data:post.featuredImage'>
+                        <a class='tv-card-media' expr:href='data:post.url'>
+                          <img decoding='async' expr:alt='data:post.title' expr:src='data:post.featuredImage' loading='lazy' onerror='this.style.display=&quot;none&quot;; this.nextElementSibling.style.display=&quot;flex&quot;;'/>
+                          <div aria-hidden='true' class='tv-card-media-fallback' style='display: none;'>
+                            <span class='tv-card-media-brand'>TRENDVERSE</span>
+                            <b:if cond='data:post.labels'>
+                              <span class='tv-card-media-cat'><data:post.labels.first.name/></span>
+                            </b:if>
+                          </div>
+                        </a>
+                      <b:else/>
+                        <a class='tv-card-media' expr:href='data:post.url'>
+                          <div class='tv-card-media-fallback'>
+                            <span class='tv-card-media-brand'>TRENDVERSE</span>
+                            <b:if cond='data:post.labels'>
+                              <span class='tv-card-media-cat'><data:post.labels.first.name/></span>
+                            <b:else/>
+                              <span class='tv-card-media-cat'>Editorial Dispatch</span>
+                            </b:if>
+                          </div>
+                        </a>
+                      </b:if>
+                      <div class='tv-card-body'>
+                        <div class='tv-meta-line'>
+                          <b:if cond='data:post.labels'>
+                            <span class='tv-cat-badge'><data:post.labels.first.name/></span>
+                            <span>&#183;</span>
+                          </b:if>
+                          <time expr:datetime='data:post.date.iso8601'><data:post.date/></time>
+                        </div>
+                        <h2 class='tv-card-title'><a expr:href='data:post.url'><data:post.title/></a></h2>
+                        <p class='tv-card-excerpt'><data:post.snippets.short/></p>
+                        <a class='tv-read-link' expr:href='data:post.url'>Read article &#8594;</a>
+                      </div>
+                    </article>
+                  </b:loop>
+                </div>
+
+                <div class='tv-pagination'>
+                  <b:if cond='data:newerPageUrl'>
+                    <a expr:href='data:newerPageUrl'>&#8592; Newer Stories</a>
+                  <b:else/>
+                    <span/>
+                  </b:if>
+                  <b:if cond='data:olderPageUrl'>
+                    <a expr:href='data:olderPageUrl'>Older Stories &#8594;</a>
+                  </b:if>
+                </div>
+              </b:if>
+
+            </b:includable>
+          </b:widget>
+        </b:section>
+      </section>
+
+      <!-- Editorial Sidebar -->
+      <aside aria-label='Sidebar'>
+        <div class='tv-ad-slot' style='min-height: 260px; margin-top: 0;'>
+          <span class='tv-ad-label'>Advertisement</span>
+          <b:section id='sidebar-ad-slot' maxwidgets='1' showaddelement='yes'/>
+        </div>
+
+        <div class='tv-sidebar-box'>
+          <b:section id='sidebar-founder' maxwidgets='1' showaddelement='yes'>
+            <b:widget id='HTML1' locked='false' title='About TRENDVERSE' type='HTML' version='2'>
+              <b:includable id='main'>
+                <h3><data:title/></h3>
+                <div class='widget-content'>
+                  <b:if cond='data:content != &quot;&quot;'>
+                    <data:content/>
+                  <b:else/>
+                    <p style='margin: 0 0 10px; font-size: 0.875rem; color: #475569;'>Founded and developed by <strong>Vicky</strong>. Published by <strong>TRENDVERSE Editorial Team</strong>.</p>
+                    <a class='tv-read-link' href='/p/about.html'>Read About Us &#8594;</a>
+                  </b:if>
+                </div>
+              </b:includable>
+            </b:widget>
+          </b:section>
+        </div>
+
+        <div class='tv-sidebar-box'>
+          <b:section id='sidebar-labels' maxwidgets='2' showaddelement='yes'>
+            <b:widget id='Label1' locked='false' title='Categories' type='Label' version='2'/>
+          </b:section>
+        </div>
+
+        <div class='tv-sidebar-box'>
+          <b:section id='sidebar-popular' maxwidgets='1' showaddelement='yes'>
+            <b:widget id='PopularPosts1' locked='false' title='Popular Stories' type='PopularPosts' version='2'/>
+          </b:section>
+        </div>
+
+        <div class='tv-sidebar-box'>
+          <b:section id='sidebar-archive' maxwidgets='1' showaddelement='yes'>
+            <b:widget id='BlogArchive1' locked='false' title='Editorial Archives' type='BlogArchive' version='2'/>
+          </b:section>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Reserved Footer Ad Slot (Zero CLS) -->
+  <b:if cond='!data:view.isError'>
+    <div class='tv-container'>
+      <div class='tv-ad-slot'>
+        <span class='tv-ad-label'>Advertisement</span>
+        <b:section id='footer-ad-slot' maxwidgets='1' showaddelement='yes'/>
+      </div>
+    </div>
+  </b:if>
+
+  <!-- Footer -->
+  <footer class='tv-footer'>
+    <div class='tv-container'>
+      <div class='tv-footer-grid'>
+        <div>
+          <div class='tv-brand'>TRENDVERSE</div>
+          <p style='margin-top: 10px; max-width: 44ch; font-size: 0.875rem;'>Discover What&#39;s Next. Independent global platform covering world news, technology, artificial intelligence, careers, scholarships, and free utilities.</p>
+          <p style='margin-top: 10px; font-size: 0.8125rem; color: #93c5fd;'>Founded and developed by Vicky &#183; Published by TRENDVERSE Editorial Team</p>
+        </div>
+        <div>
+          <h4>News Desks</h4>
+          <ul>
+            <li><a href='/search/label/Technology%20%26%20AI'>Technology &amp; AI</a></li>
+            <li><a href='/search/label/World'>World Affairs</a></li>
+            <li><a href='/search/label/Business%20%26%20Finance'>Business &amp; Finance</a></li>
+            <li><a href='/search/label/Science%20%26%20Space'>Science &amp; Space</a></li>
+            <li><a href='/search/label/Entertainment'>Entertainment</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Careers &amp; Tools</h4>
+          <ul>
+            <li><a href='/search/label/Careers'>Careers &amp; Jobs</a></li>
+            <li><a href='/search/label/Internships'>Internships</a></li>
+            <li><a href='/search/label/Scholarships'>Scholarships</a></li>
+            <li><a href='/search/label/Government%20Jobs'>Government Jobs</a></li>
+            <li><a href='/p/free-tools.html'>Free Online Tools</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Editorial &amp; Legal</h4>
+          <ul>
+            <li><a href='/p/about.html'>About Us</a></li>
+            <li><a href='/p/contact.html'>Contact</a></li>
+            <li><a href='/p/privacy-policy.html'>Privacy Policy</a></li>
+            <li><a href='/p/terms-and-conditions.html'>Terms and Conditions</a></li>
+            <li><a href='/p/disclaimer.html'>Disclaimer</a></li>
+            <li><a href='/p/editorial-policy.html'>Editorial Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class='tv-footer-bottom'>
+        <span>&#169; <data:blog.title/>. Founded &amp; Developed by Vicky.</span>
+        <span>Publisher: TRENDVERSE Editorial Team</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Standalone Vanilla JavaScript (mirrors blogger/trendverse-app.js) -->
+  <script type='text/javascript'>
+    //<![CDATA[
+    (function () {
+      'use strict';
+
+      function normalizeBloggerUrl(url) {
+        return String(url || '')
+          .replace(/^https?:\/\//i, '')
+          .replace(/[?#].*$/, '')
+          .replace(/\/+$/, '');
+      }
+
+      // 0. Live Digital World Clock (Homepage Bar)
+      var liveDateEl = document.getElementById('tv-live-date');
+      var liveClocksEl = document.getElementById('tv-live-clocks');
+      if (liveDateEl && liveClocksEl) {
+        function updateClocks() {
+          var now = new Date();
+          liveDateEl.textContent = now.toUTCString().replace('GMT', 'UTC');
+          var zones = [
+            ['NYC', 'America/New_York'],
+            ['LON', 'Europe/London'],
+            ['DEL', 'Asia/Kolkata'],
+            ['TYO', 'Asia/Tokyo']
+          ];
+          liveClocksEl.textContent = '';
+          zones.forEach(function (z) {
+            var span = document.createElement('span');
+            try {
+              var t = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: z[1] });
+              span.textContent = z[0] + ': ' + t;
+            } catch (e) {
+              span.textContent = z[0];
+            }
+            liveClocksEl.appendChild(span);
+          });
+        }
+        updateClocks();
+        setInterval(updateClocks, 60000);
+      }
+
+      // 1. Mobile Navigation Drawer + Escape + Outside Click
+      var menuBtn = document.getElementById('tv-menu-toggle');
+      var navEl = document.getElementById('tv-primary-nav');
+      if (menuBtn && navEl) {
+        menuBtn.addEventListener('click', function () {
+          var expanded = menuBtn.getAttribute('aria-expanded') === 'true';
+          menuBtn.setAttribute('aria-expanded', String(!expanded));
+          navEl.classList.toggle('is-open');
+        });
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' && navEl.classList.contains('is-open')) {
+            navEl.classList.remove('is-open');
+            menuBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+        document.addEventListener('click', function (event) {
+          if (
+            navEl.classList.contains('is-open') &&
+            !navEl.contains(event.target) &&
+            !menuBtn.contains(event.target)
+          ) {
+            navEl.classList.remove('is-open');
+            menuBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+      // 2. Deduplicate Featured Cover if Post Body Starts With Same Image
+      var articleCover = document.getElementById('tv-article-cover');
+      var articleBody = document.getElementById('tv-article-body');
+      if (articleCover && articleBody) {
+        var coverImg = articleCover.querySelector('img');
+        var firstBodyImg = articleBody.querySelector('img');
+        if (
+          coverImg &&
+          firstBodyImg &&
+          normalizeBloggerUrl(coverImg.src) === normalizeBloggerUrl(firstBodyImg.src)
+        ) {
+          articleCover.style.display = 'none';
+        }
+      }
+
+      // 3. Automatic Table of Contents on Post Pages
+      var tocList = document.getElementById('tv-toc-list');
+      var tocBox = document.getElementById('tv-toc-box');
+      if (articleBody && tocList && tocBox) {
+        var headings = articleBody.querySelectorAll('h2, h3');
+        if (headings.length > 0) {
+          tocBox.hidden = false;
+          headings.forEach(function (h, i) {
+            if (!h.id) h.id = 'section-' + (i + 1);
+            var li = document.createElement('li');
+            var a = document.createElement('a');
+            a.href = '#' + h.id;
+            a.textContent = h.textContent;
+            li.appendChild(a);
+            tocList.appendChild(li);
+          });
+        }
+      }
+
+      // 4. Related Posts via Blogger JSONP Feed (Protocol & ?m=1 Normalized)
+      var relatedBox = document.getElementById('tv-related-posts');
+      if (relatedBox) {
+        var label = relatedBox.getAttribute('data-label');
+        var currentUrlNorm = normalizeBloggerUrl(
+          relatedBox.getAttribute('data-current-url') || window.location.href
+        );
+        if (label) {
+          window.tvRenderRelated = function (data) {
+            var entries = (data && data.feed && data.feed.entry) || [];
+            var list = document.getElementById('tv-related-list');
+            if (!list) return;
+            var count = 0;
+            entries.forEach(function (entry) {
+              if (count >= 4) return;
+              var href = '';
+              (entry.link || []).forEach(function (l) {
+                if (l.rel === 'alternate') href = l.href;
+              });
+              if (!href || normalizeBloggerUrl(href) === currentUrlNorm) return;
+              var li = document.createElement('li');
+              var a = document.createElement('a');
+              a.href = href;
+              a.textContent = (entry.title && entry.title.$t) || 'Related Story';
+              li.appendChild(a);
+              list.appendChild(li);
+              count += 1;
+            });
+            if (count > 0) relatedBox.hidden = false;
+          };
+          var s = document.createElement('script');
+          s.src =
+            '/feeds/posts/default/-/' +
+            encodeURIComponent(label) +
+            '?alt=json-in-script&callback=tvRenderRelated&max-results=6';
+          s.async = true;
+          s.onerror = function () {
+            relatedBox.hidden = true;
+          };
+          document.body.appendChild(s);
+        }
+      }
+
+      // 5. Copy Link & Social Share Intents
+      var copyBtn = document.getElementById('tv-copy-link');
+      if (copyBtn && navigator.clipboard && navigator.clipboard.writeText) {
+        copyBtn.addEventListener('click', function () {
+          navigator.clipboard.writeText(window.location.href).then(function () {
+            copyBtn.textContent = 'Link Copied';
+            setTimeout(function () { copyBtn.textContent = 'Copy Link'; }, 2000);
+          });
+        });
+      }
+      var pageUrl = encodeURIComponent(window.location.href);
+      var pageTitle = encodeURIComponent(document.title);
+      var sx = document.getElementById('tv-share-x');
+      var sl = document.getElementById('tv-share-linkedin');
+      var sw = document.getElementById('tv-share-whatsapp');
+      if (sx) sx.href = 'https://twitter.com/intent/tweet?url=' + pageUrl + '&text=' + pageTitle;
+      if (sl) sl.href = 'https://www.linkedin.com/sharing/share-offsite/?url=' + pageUrl;
+      if (sw) sw.href = 'https://api.whatsapp.com/send?text=' + pageTitle + '%20' + pageUrl;
+    })();
+    //]]>
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# TRENDVERSE — Robots Directives
+# Note for Blogger Custom robots.txt (Settings -> Crawlers and indexing):
+# Copy lines below and replace https://YOUR-DOMAIN with your live Blogspot or custom domain URL.
+
+User-agent: *
+Disallow: /search
+Allow: /search/label/
+Allow: /
+
+# Standard Blogger XML Sitemaps & Atom/RSS Feeds:
+Sitemap: https://YOUR-DOMAIN/sitemap.xml
+# Blogger Pages Sitemap (automatically served by Blogger):
+# Sitemap: https://YOUR-DOMAIN/sitemap-pages.xml
+# Primary Atom Feed: https://YOUR-DOMAIN/feeds/posts/default?alt=rss
