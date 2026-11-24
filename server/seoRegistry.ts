@@ -1022,9 +1022,10 @@ export function injectSeoIntoHtml(
   const seo = resolveRouteSeo(pathname, search, env);
   const gscToken = (env.VITE_GSC_VERIFICATION || env.GSC_VERIFICATION || '').trim();
   const bingToken = (env.VITE_BING_VERIFICATION || env.BING_VERIFICATION || '').trim();
+  const hasStaticGscTag = /<meta\s+[^>]*name=["']google-site-verification["']/i.test(templateHtml);
 
   const verificationTags = [
-    gscToken
+    gscToken && !hasStaticGscTag
       ? `    <meta name="google-site-verification" content="${escapeHtml(gscToken)}" />`
       : '',
     bingToken
