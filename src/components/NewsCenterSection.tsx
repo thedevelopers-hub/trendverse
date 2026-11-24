@@ -12,6 +12,7 @@ interface NewsCenterSectionProps {
   onChangeAutoRefresh: (minutes: number) => void;
   onManualRefresh: () => void;
   compactMode?: boolean;
+  mode?: 'section' | 'page';
 }
 
 const NEWS_CATEGORIES: Array<'All' | NewsCategory> = [
@@ -37,6 +38,7 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
   onChangeAutoRefresh,
   onManualRefresh,
   compactMode = false,
+  mode = 'section',
 }) => {
   const [selectedCat, setSelectedCat] = useState<'All' | NewsCategory>('All');
   const [showSources, setShowSources] = useState(false);
@@ -61,9 +63,15 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
           <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-1.5">
             Live Global News Center
           </p>
-          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
-            Verified International Feeds
-          </h2>
+          {mode === 'page' ? (
+            <h1 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+              Verified International Feeds
+            </h1>
+          ) : (
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+              Verified International Feeds
+            </h2>
+          )}
           <p className="mt-1.5 text-sm text-slate-600 max-w-2xl">
             Reported external dispatches with original publisher attribution and publication
             timestamps from BBC News, NPR, The Hindu, NASA, Google AI Blog, MIT News AI, and UN

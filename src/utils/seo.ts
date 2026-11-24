@@ -34,12 +34,38 @@ function upsertCanonical(url: string): void {
   link.setAttribute('href', url);
 }
 
+function truncateWordBoundary(text: string, maxLen = 158): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= maxLen) return clean;
+  const sliced = clean.slice(0, maxLen);
+  const lastSpace = sliced.lastIndexOf(' ');
+  return (lastSpace > 80 ? sliced.slice(0, lastSpace) : sliced).replace(/[,:;.\-–—]+$/, '');
+}
+
+function computeArticleWordCount(article: Article): number {
+  const chunks: string[] = [article.title, article.subtitle];
+  if (article.editorialContext) {
+    chunks.push(
+      article.editorialContext.whatHappened,
+      article.editorialContext.whyItMatters,
+      article.editorialContext.whatReadersShouldUnderstand
+    );
+  }
+  for (const sec of article.sections) {
+    chunks.push(sec.heading, ...sec.paragraphs);
+    if (sec.pullQuote) chunks.push(sec.pullQuote);
+  }
+  const tokens = chunks.join(' ').trim().split(/\s+/).filter(Boolean);
+  return tokens.length;
+}
+
 function applySharedSocialTags(opts: {
   title: string;
   description: string;
   url: string;
   ogType: 'website' | 'article';
   author?: string;
+  imageUrl?: string;
   publishedTime?: string;
   modifiedTime?: string;
   articleSection?: string;
@@ -52,10 +78,17 @@ function applySharedSocialTags(opts: {
   upsertMeta('property', 'og:description', opts.description);
   upsertMeta('property', 'og:url', opts.url);
   upsertMeta('property', 'og:locale', 'en_US');
-  upsertMeta('name', 'twitter:card', 'summary_large_image');
+  upsertMeta('name', 'twitter:card', opts.imageUrl ? 'summary_large_image' : 'summary');
   upsertMeta('name', 'twitter:title', opts.title);
   upsertMeta('name', 'twitter:description', opts.description);
   upsertMeta('name', 'twitter:url', opts.url);
+  if (opts.imageUrl) {
+    upsertMeta('property', 'og:image', opts.imageUrl);
+    upsertMeta('name', 'twitter:image', opts.imageUrl);
+  } else {
+    removeMeta('property', 'og:image');
+    removeMeta('name', 'twitter:image');
+  }
 
   if (opts.ogType === 'article') {
     if (opts.publishedTime) upsertMeta('property', 'article:published_time', opts.publishedTime);
@@ -145,7 +178,7 @@ function buildCoreGraphNodes(
 export function applySeoForHome(): void {
   const title = "TRENDVERSE — Discover What's Next | International Media & Tools";
   const desc =
-    'TRENDVERSE delivers technology explainers, world affairs, business education, science discoveries, careers intelligence, and free online utilities for global readers.';
+    'TRENDVERSE delivers technology explainers, world affairs, finance education, science insights, career tools, and free utilities for global readers.';
   const origin = getCanonicalOrigin();
   const url = `${origin}/`;
 
@@ -173,12 +206,13 @@ export function applySeoForHome(): void {
 }
 
 export function applySeoForArticle(article: Article): void {
-  const title = `${article.title} — TRENDVERSE`;
-  const desc = article.summary.slice(0, 160);
+  const title = article.seoTitle || `${article.title} — TRENDVERSE`;
+  const desc = truncateWordBoundary(article.seoDescription || article.summary, 158);
   const origin = getCanonicalOrigin();
   const articleUrl = `${origin}/article/${encodeURIComponent(article.slug)}`;
   const canonicalUrl = article.externalUrl || articleUrl;
   const categoryPath = `/search/label/${encodeURIComponent(article.categoryName)}`;
+  const wordCount = computeArticleWordCount(article);
 
   const isDraft = article.editorialStatus === 'draft-pending-review';
   const authorType = article.authorId === 'vicky' ? 'Person' : 'Organization';
@@ -186,10 +220,11 @@ export function applySeoForArticle(article: Article): void {
   document.title = title;
   upsertRobots(isDraft ? 'noindex, follow' : 'index, follow, max-image-preview:large');
   applySharedSocialTags({
-    title: article.title,
+    title,
     description: desc,
     url: canonicalUrl,
     ogType: 'article',
+    imageUrl: article.imageUrl,
     author: article.authorName || FOUNDER_BRAND_IDENTITY.founderName,
     publishedTime: article.publishedAt,
     modifiedTime: article.updatedAt,
@@ -210,6 +245,8 @@ export function applySeoForArticle(article: Article): void {
         datePublished: article.publishedAt,
         dateModified: article.updatedAt,
         inLanguage: 'en',
+        isAccessibleForFree: true,
+        wordCount,
         articleSection: article.categoryName,
         keywords: article.labels.join(', '),
         author:
@@ -256,7 +293,7 @@ export function applySeoForArticle(article: Article): void {
 
 export function applySeoForCategory(category: CategoryInfo): void {
   const title = `${category.name} — News, Analysis & Explainers | TRENDVERSE`;
-  const desc = category.seoDescription.slice(0, 160);
+  const desc = truncateWordBoundary(category.seoDescription, 158);
   const origin = getCanonicalOrigin();
   const catUrl = `${origin}/search/label/${encodeURIComponent(category.bloggerLabel)}`;
 
@@ -345,7 +382,7 @@ export function applySeoForTools(toolId?: string): void {
 export function applySeoForPolicy(pageId: PolicyPageId): void {
   const page = POLICY_PAGES[pageId];
   const title = page.seoTitle || `${page.title} — TRENDVERSE`;
-  const desc = (page.seoDescription || page.subtitle).slice(0, 160);
+  const desc = truncateWordBoundary(page.seoDescription || page.subtitle, 158);
   const origin = getCanonicalOrigin();
   const pageUrl = `${origin}/policy/${encodeURIComponent(pageId)}`;
   const pageType =

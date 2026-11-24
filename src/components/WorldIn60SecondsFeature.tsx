@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { DailyBriefingResponse } from '../../server/types';
 import { AppRoute, EditorialDraft } from '../types/editorial';
+import { routeToUrl } from '../utils/routes';
 import { formatPublicationTimestamp } from '../utils/timeFormat';
 
 interface WorldIn60SecondsFeatureProps {
@@ -213,9 +214,15 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               <span>Your World in 60 Seconds</span>
             </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-semibold text-white">
-              Daily Global News Briefing &amp; Audio Digest
-            </h2>
+            {mode === 'page' ? (
+              <h1 className="font-display text-2xl sm:text-3xl font-semibold text-white">
+                Daily Global News Briefing &amp; Audio Digest
+              </h1>
+            ) : (
+              <h2 className="font-display text-2xl sm:text-3xl font-semibold text-white">
+                Daily Global News Briefing &amp; Audio Digest
+              </h2>
+            )}
             <p className="mt-1.5 text-sm text-slate-300 max-w-2xl">
               5 to 10 verified developments synthesized strictly from live RSS feeds with source
               links, actual publication timestamps, and browser text-to-speech playback.
@@ -233,14 +240,18 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
             </button>
 
             {mode === 'section' && (
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'briefing' })}
+              <a
+                href={routeToUrl({ view: 'briefing' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'briefing' });
+                }}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-white/10 cursor-pointer"
               >
                 <span>Dedicated Page</span>
                 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
+              </a>
             )}
 
             <button

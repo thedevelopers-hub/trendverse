@@ -9,12 +9,19 @@ import {
   Wrench,
 } from 'lucide-react';
 import { AppRoute } from '../types/editorial';
+import { routeToUrl } from '../utils/routes';
 
 interface CareersHomeHighlightProps {
   onNavigate: (route: AppRoute) => void;
 }
 
 export const CareersHomeHighlight: React.FC<CareersHomeHighlightProps> = ({ onNavigate }) => {
+  const handleSpaNav = (e: React.MouseEvent, route: AppRoute) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onNavigate(route);
+  };
+
   const quickTracks: Array<{
     title: string;
     subtitle: string;
@@ -81,25 +88,26 @@ export const CareersHomeHighlight: React.FC<CareersHomeHighlightProps> = ({ onNa
               government recruitment portals, and 10 browser-local career utilities—zero paid accounts.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => onNavigate({ view: 'careers', tab: 'overview' })}
+          <a
+            href={routeToUrl({ view: 'careers', tab: 'overview' })}
+            onClick={(e) => handleSpaNav(e, { view: 'careers', tab: 'overview' })}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition-colors self-start cursor-pointer shrink-0"
           >
             <span>Open Careers Portal</span>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
+          </a>
         </div>
 
         <div className="mt-7 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
           {quickTracks.map((track) => {
             const Icon = track.icon;
+            const route: AppRoute = { view: 'careers', tab: track.tab };
             return (
-              <button
+              <a
                 key={track.tab}
-                type="button"
-                onClick={() => onNavigate({ view: 'careers', tab: track.tab })}
-                className="group rounded-xl border border-white/15 bg-white/5 p-4 text-left hover:border-blue-400 hover:bg-white/10 transition-colors cursor-pointer"
+                href={routeToUrl(route)}
+                onClick={(e) => handleSpaNav(e, route)}
+                className="group block rounded-xl border border-white/15 bg-white/5 p-4 text-left hover:border-blue-400 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <Icon className="h-5 w-5 text-blue-400" aria-hidden="true" />
@@ -112,7 +120,7 @@ export const CareersHomeHighlight: React.FC<CareersHomeHighlightProps> = ({ onNa
                   {track.title}
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-slate-300">{track.subtitle}</p>
-              </button>
+              </a>
             );
           })}
         </div>

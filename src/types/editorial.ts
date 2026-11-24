@@ -54,8 +54,15 @@ export interface Article {
   id: string;
   slug: string;
   title: string;
+  seoTitle?: string;
   subtitle: string;
   summary: string;
+  seoDescription?: string;
+  contextualLinks?: Array<{
+    label: string;
+    description: string;
+    route: AppRoute;
+  }>;
   category: CategorySlug;
   categoryName: string;
   labels: string[];

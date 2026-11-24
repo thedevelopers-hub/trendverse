@@ -9,8 +9,10 @@ import {
   AIToolCategory,
 } from '../data/aiDirectory';
 import { formatPublicationTimestamp } from '../utils/timeFormat';
+import { routeToUrl } from '../utils/routes';
 
 interface AIIntelligenceCenterProps {
+  mode?: 'section' | 'page';
   newsItems: LiveNewsItem[];
   articles: Article[];
   useUtc: boolean;
@@ -20,6 +22,7 @@ interface AIIntelligenceCenterProps {
 type AITab = 'news' | 'tools' | 'models' | 'learning';
 
 export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
+  mode = 'section',
   newsItems,
   articles,
   useUtc,
@@ -62,9 +65,15 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
               <Cpu className="h-4 w-4" aria-hidden="true" />
               <span>AI Intelligence Center</span>
             </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
-              AI News, Verified Tools &amp; Model Reference
-            </h2>
+            {mode === 'page' ? (
+              <h1 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                AI News, Verified Tools &amp; Model Reference
+              </h1>
+            ) : (
+              <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                AI News, Verified Tools &amp; Model Reference
+              </h2>
+            )}
             <p className="mt-1.5 text-sm text-slate-600 max-w-2xl">
               Live official AI research dispatches, verified tool directory, model pricing
               documentation links, and practical technical explainers.
@@ -270,40 +279,51 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
         {/* Section D: AI Learning Center */}
         {activeTab === 'learning' && (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {learningArticles.map((art) => (
-              <div
-                key={art.id}
-                className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6"
-              >
-                <div>
-                  <div className="text-xs text-slate-500 mb-2">
-                    <span className="font-semibold text-blue-600">{art.categoryName}</span>
-                    <span aria-hidden="true"> · </span>
-                    <span>{art.readTimeMinutes} min guide</span>
+            {learningArticles.map((art) => {
+              const artUrl = routeToUrl({ view: 'article', slug: art.slug });
+              return (
+                <div
+                  key={art.id}
+                  className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6"
+                >
+                  <div>
+                    <div className="text-xs text-slate-500 mb-2">
+                      <span className="font-semibold text-blue-600">{art.categoryName}</span>
+                      <span aria-hidden="true"> · </span>
+                      <span>{art.readTimeMinutes} min guide</span>
+                    </div>
+                    <h3 className="font-display text-xl font-semibold text-slate-900">
+                      <a
+                        href={artUrl}
+                        onClick={(e) => {
+                          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                          e.preventDefault();
+                          onNavigate({ view: 'article', slug: art.slug });
+                        }}
+                        className="text-left hover:text-blue-600 cursor-pointer"
+                      >
+                        {art.title}
+                      </a>
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-600">{art.summary}</p>
                   </div>
-                  <h3 className="font-display text-xl font-semibold text-slate-900">
-                    <button
-                      type="button"
-                      onClick={() => onNavigate({ view: 'article', slug: art.slug })}
-                      className="text-left hover:text-blue-600 cursor-pointer"
+                  <div className="mt-4 pt-3 border-t border-slate-100">
+                    <a
+                      href={artUrl}
+                      onClick={(e) => {
+                        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                        e.preventDefault();
+                        onNavigate({ view: 'article', slug: art.slug });
+                      }}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
                     >
-                      {art.title}
-                    </button>
-                  </h3>
-                  <p className="mt-2 text-sm text-slate-600">{art.summary}</p>
+                      <span>Read Technical Guide</span>
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate({ view: 'article', slug: art.slug })}
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
-                  >
-                    <span>Read Technical Guide</span>
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { LiveNewsItem, TrendItem } from '../../server/types';
 import { AppRoute, Article } from '../types/editorial';
+import { routeToUrl } from '../utils/routes';
 import { formatPublicationTimestamp, formatRelativeTime } from '../utils/timeFormat';
 import { VisitorActivityState } from '../utils/visitorActivity';
 
@@ -82,7 +83,7 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
       title: a.title,
       category: a.categoryName,
       publisher: a.authorName,
-      url: `#article/${a.slug}`,
+      url: routeToUrl({ view: 'article', slug: a.slug }),
       publishedAt: a.publishedAt,
       updatedAt: a.updatedAt,
       isInternalSlug: a.slug,
@@ -161,9 +162,15 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
 
             {visitorState.isReturningVisitor ? (
               <>
-                <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
-                  Welcome Back! Here&apos;s What&apos;s New.
-                </h2>
+                {mode === 'page' ? (
+                  <h1 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                    Welcome Back! Here&apos;s What&apos;s New.
+                  </h1>
+                ) : (
+                  <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                    Welcome Back! Here&apos;s What&apos;s New.
+                  </h2>
+                )}
                 <p className="mt-1.5 text-sm text-slate-600">
                   Since your previous visit on{' '}
                   <strong>
@@ -183,9 +190,15 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
               </>
             ) : (
               <>
-                <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
-                  Welcome to TRENDVERSE — Today&apos;s Essential Dispatches
-                </h2>
+                {mode === 'page' ? (
+                  <h1 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                    Welcome to TRENDVERSE — Today&apos;s Essential Dispatches
+                  </h1>
+                ) : (
+                  <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                    Welcome to TRENDVERSE — Today&apos;s Essential Dispatches
+                  </h2>
+                )}
                 <p className="mt-1.5 text-sm text-slate-600">
                   This appears to be your first visit on this browser. Save stories, mark articles
                   as read, and your private local digest will track what&apos;s new when you return.
@@ -211,14 +224,18 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
               <span>Clear Local History</span>
             </button>
             {mode === 'section' && (
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'whats-new' })}
+              <a
+                href={routeToUrl({ view: 'whats-new' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'whats-new' });
+                }}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-500 cursor-pointer"
               >
                 <span>Open Full Digest</span>
                 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
+              </a>
             )}
           </div>
         </div>

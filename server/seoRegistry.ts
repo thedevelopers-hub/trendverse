@@ -18,6 +18,7 @@ export interface RouteSeoData {
   canonicalUrl: string;
   robots: string;
   ogType: 'website' | 'article';
+  imageUrl?: string;
   author: string;
   publishedTime?: string;
   modifiedTime?: string;
@@ -217,6 +218,61 @@ function escapeXml(text: string): string {
     .replace(/'/g, '&apos;');
 }
 
+function truncateWordBoundary(text: string, maxLen = 158): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= maxLen) return clean;
+  const sliced = clean.slice(0, maxLen);
+  const lastSpace = sliced.lastIndexOf(' ');
+  return (lastSpace > 80 ? sliced.slice(0, lastSpace) : sliced).replace(/[,:;.\-–—]+$/, '');
+}
+
+function computeArticleWordCount(article: Article): number {
+  const chunks: string[] = [article.title, article.subtitle];
+  if (article.editorialContext) {
+    chunks.push(
+      article.editorialContext.whatHappened,
+      article.editorialContext.whyItMatters,
+      article.editorialContext.whatReadersShouldUnderstand
+    );
+  }
+  for (const sec of article.sections) {
+    chunks.push(sec.heading, ...sec.paragraphs);
+    if (sec.pullQuote) chunks.push(sec.pullQuote);
+  }
+  return chunks.join(' ').trim().split(/\s+/).filter(Boolean).length;
+}
+
+function resolveRoutePathForLink(route: NonNullable<Article['contextualLinks']>[number]['route']): string {
+  switch (route.view) {
+    case 'home':
+      return '/';
+    case 'article':
+      return `/article/${encodeURIComponent(route.slug)}`;
+    case 'category':
+      return `/search/label/${encodeURIComponent(
+        EDITORIAL_CATEGORIES.find((c) => c.slug === route.slug)?.bloggerLabel || route.slug
+      )}`;
+    case 'tools':
+      return route.toolId ? `/tools/${encodeURIComponent(route.toolId)}` : '/tools';
+    case 'ai-center':
+      return '/ai-center';
+    case 'news-center':
+      return '/news-center';
+    case 'briefing':
+      return '/briefing';
+    case 'trend-battle':
+      return '/trend-battle';
+    case 'whats-new':
+      return '/whats-new';
+    case 'careers':
+      return route.tab === 'overview' ? '/careers' : `/careers/${route.tab}`;
+    case 'blogger-hub':
+      return '/blogger-theme';
+    case 'policy':
+      return `/policy/${encodeURIComponent(route.pageId)}`;
+  }
+}
+
 function buildCoreNodes(origin: string, pageUrl: string, title: string, pageType = 'WebPage') {
   return [
     {
@@ -298,8 +354,9 @@ function renderNoscriptFooterLinks(): string {
 function buildArticleSeo(article: Article, origin: string): RouteSeoData {
   const canonicalUrl = `${origin}/article/${encodeURIComponent(article.slug)}`;
   const categoryUrl = `${origin}/search/label/${encodeURIComponent(article.categoryName)}`;
-  const title = `${article.title} — TRENDVERSE`;
-  const description = article.summary.slice(0, 160);
+  const title = article.seoTitle || `${article.title} — TRENDVERSE`;
+  const description = truncateWordBoundary(article.seoDescription || article.summary, 158);
+  const wordCount = computeArticleWordCount(article);
 
   const sectionsHtml = article.sections
     .map(
@@ -311,6 +368,15 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
       </section>`
     )
     .join('');
+
+  const contextualLinksHtml = article.contextualLinks?.length
+    ? `<section><h2>Related Guides &amp; Tools on TRENDVERSE</h2><ul>${article.contextualLinks
+        .map(
+          (l) =>
+            `<li><a href="${escapeHtml(resolveRoutePathForLink(l.route))}">${escapeHtml(l.label)}</a> — ${escapeHtml(l.description)}</li>`
+        )
+        .join('')}</ul></section>`
+    : '';
 
   const sourcesHtml = article.sources.length
     ? `<section><h2>Sources &amp; Primary References</h2><ul>${article.sources
@@ -330,6 +396,7 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
     canonicalUrl,
     robots: isDraft ? 'noindex, follow' : 'index, follow, max-image-preview:large',
     ogType: 'article',
+    imageUrl: article.imageUrl,
     author: article.authorName || FOUNDER_BRAND_IDENTITY.founderName,
     publishedTime: article.publishedAt,
     modifiedTime: article.updatedAt,
@@ -348,6 +415,8 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
           datePublished: article.publishedAt,
           dateModified: article.updatedAt,
           inLanguage: 'en',
+          isAccessibleForFree: true,
+          wordCount,
           articleSection: article.categoryName,
           keywords: article.labels.join(', '),
           author:
@@ -398,6 +467,7 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
           <p>${escapeHtml(article.subtitle)}</p>
           <p>By ${escapeHtml(article.authorName)} · Published ${escapeHtml(article.publishedAt)} · Updated ${escapeHtml(article.updatedAt)}</p>
           ${sectionsHtml}
+          ${contextualLinksHtml}
           ${sourcesHtml}
         </article>
         ${renderNoscriptFooterLinks()}
@@ -409,8 +479,10 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
 function buildCategorySeo(category: CategoryInfo, origin: string, prerenderPath?: string): RouteSeoData {
   const canonicalUrl = `${origin}/search/label/${encodeURIComponent(category.bloggerLabel)}`;
   const title = `${category.name} — News, Analysis & Explainers | TRENDVERSE`;
-  const description = category.seoDescription.slice(0, 160);
-  const matching = EVERGREEN_ARTICLES.filter((a) => a.category === category.slug);
+  const description = truncateWordBoundary(category.seoDescription, 158);
+  const matching = EVERGREEN_ARTICLES.filter(
+    (a) => a.category === category.slug && a.editorialStatus !== 'draft-pending-review'
+  );
 
   return {
     title,
@@ -580,7 +652,7 @@ export function resolveRouteSeo(
     const page = POLICY_PAGES[pageId];
     const canonicalUrl = `${origin}/policy/${pageId}`;
     const title = page.seoTitle || `${page.title} — TRENDVERSE`;
-    const description = (page.seoDescription || page.subtitle).slice(0, 160);
+    const description = truncateWordBoundary(page.seoDescription || page.subtitle, 158);
     const schemaPageType =
       pageId === 'about' ? 'AboutPage' : pageId === 'contact' ? 'ContactPage' : 'WebPage';
 
@@ -852,12 +924,16 @@ export function resolveRouteSeo(
   const canonicalUrl = `${origin}/`;
   const title = "TRENDVERSE — Discover What's Next | International Media & Tools";
   const description =
-    'TRENDVERSE delivers technology explainers, world affairs, business education, science discoveries, careers intelligence, and free online utilities for global readers.';
+    'TRENDVERSE delivers technology explainers, world affairs, finance education, science insights, career tools, and free utilities for global readers.';
 
-  const featuredArticlesHtml = EVERGREEN_ARTICLES.map(
-    (a) =>
-      `<li><a href="/article/${encodeURIComponent(a.slug)}">${escapeHtml(a.title)}</a> (${escapeHtml(a.categoryName)}) — ${escapeHtml(a.summary)}</li>`
-  ).join('');
+  const featuredArticlesHtml = EVERGREEN_ARTICLES.filter(
+    (a) => a.editorialStatus !== 'draft-pending-review'
+  )
+    .map(
+      (a) =>
+        `<li><a href="/article/${encodeURIComponent(a.slug)}">${escapeHtml(a.title)}</a> (${escapeHtml(a.categoryName)}) — ${escapeHtml(a.summary)}</li>`
+    )
+    .join('');
 
   return {
     title,
@@ -1101,11 +1177,15 @@ export function injectSeoIntoHtml(
     <meta property="og:title" content="${escapeHtml(seo.title)}" />
     <meta property="og:description" content="${escapeHtml(seo.description)}" />
     <meta property="og:url" content="${escapeHtml(seo.canonicalUrl)}" />
-    <meta property="og:locale" content="en_US" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:locale" content="en_US" />${
+      seo.imageUrl ? `\n    <meta property="og:image" content="${escapeHtml(seo.imageUrl)}" />` : ''
+    }
+    <meta name="twitter:card" content="${seo.imageUrl ? 'summary_large_image' : 'summary'}" />
     <meta name="twitter:title" content="${escapeHtml(seo.title)}" />
     <meta name="twitter:description" content="${escapeHtml(seo.description)}" />
-    <meta name="twitter:url" content="${escapeHtml(seo.canonicalUrl)}" />
+    <meta name="twitter:url" content="${escapeHtml(seo.canonicalUrl)}" />${
+      seo.imageUrl ? `\n    <meta name="twitter:image" content="${escapeHtml(seo.imageUrl)}" />` : ''
+    }
 ${articleMetaTags}${verificationTags ? `\n${verificationTags}` : ''}
     <script type="application/ld+json" id="trendverse-route-schema">${JSON.stringify(seo.jsonLd)}</script>
   `.trim();

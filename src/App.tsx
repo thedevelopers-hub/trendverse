@@ -621,8 +621,9 @@ export default function App() {
     setFeedError(null);
   };
 
+  const publicArticles = articles.filter((a) => a.editorialStatus !== 'draft-pending-review');
   const activeArticle =
-    route.view === 'article' ? getArticleBySlug(route.slug, articles) || articles[0] : null;
+    route.view === 'article' ? getArticleBySlug(route.slug, articles) || publicArticles[0] || articles[0] : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900">
@@ -649,7 +650,7 @@ export default function App() {
         >
         {route.view === 'home' && (
           <HomePage
-            articles={articles}
+            articles={publicArticles}
             liveBlogTitle={connectedBlogTitle}
             useUtc={useUtc}
             onToggleUtc={setUseUtc}
@@ -726,7 +727,7 @@ export default function App() {
               mode="page"
               visitorState={visitorState}
               liveNews={newsData?.items ?? []}
-              articles={articles}
+              articles={publicArticles}
               trends={trendsData?.trends ?? []}
               useUtc={useUtc}
               onMarkRead={handleMarkRead}
@@ -750,6 +751,7 @@ export default function App() {
           <div>
             <LiveWorldClock useUtc={useUtc} onToggleUtc={setUseUtc} />
             <NewsCenterSection
+              mode="page"
               data={newsData}
               loading={newsLoading}
               error={newsError}
@@ -773,8 +775,9 @@ export default function App() {
           <div>
             <LiveWorldClock useUtc={useUtc} onToggleUtc={setUseUtc} />
             <AIIntelligenceCenter
+              mode="page"
               newsItems={newsData?.items ?? []}
-              articles={articles}
+              articles={publicArticles}
               useUtc={useUtc}
               onNavigate={navigate}
             />
@@ -784,7 +787,7 @@ export default function App() {
         {route.view === 'article' && activeArticle && (
           <ArticlePage
             article={activeArticle}
-            allArticles={articles}
+            allArticles={publicArticles}
             onNavigate={navigate}
           />
         )}
@@ -792,7 +795,7 @@ export default function App() {
         {route.view === 'category' && (
           <CategoryPage
             slug={route.slug}
-            articles={articles}
+            articles={publicArticles}
             onNavigate={navigate}
           />
         )}
@@ -834,7 +837,7 @@ export default function App() {
       <SearchModal
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
-        articles={articles}
+        articles={publicArticles}
         liveNews={newsData?.items ?? []}
         trends={trendsData?.trends ?? []}
         onNavigate={navigate}

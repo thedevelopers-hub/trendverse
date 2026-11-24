@@ -315,6 +315,32 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, 
               ))
             )}
 
+            {/* Contextual Cluster Guides & Utilities */}
+            {article.contextualLinks && article.contextualLinks.length > 0 && (
+              <section
+                aria-label="Related guides and utilities on TRENDVERSE"
+                className="rounded-xl border border-blue-200/70 bg-blue-50/40 p-5"
+              >
+                <h2 className="font-display text-base font-semibold text-slate-900 mb-3">
+                  Explore Related Guides &amp; Tools
+                </h2>
+                <ul className="space-y-2.5 text-sm">
+                  {article.contextualLinks.map((item) => (
+                    <li key={item.label} className="leading-snug">
+                      <a
+                        href={routeToUrl(item.route)}
+                        onClick={(e) => handleSpaNav(e, item.route)}
+                        className="font-semibold text-blue-700 hover:underline"
+                      >
+                        {item.label}
+                      </a>
+                      <p className="text-xs text-slate-600 mt-0.5">{item.description}</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {/* Topic Labels */}
             <div className="border-t border-slate-200 pt-6">
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">

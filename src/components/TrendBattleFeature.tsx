@@ -6,6 +6,7 @@ import {
   TrendGeoCode,
 } from '../../server/types';
 import { AppRoute } from '../types/editorial';
+import { routeToUrl } from '../utils/routes';
 import { fetchTrendBattle } from '../services/newsroomApi';
 import { formatPublicationTimestamp } from '../utils/timeFormat';
 
@@ -156,9 +157,15 @@ export const TrendBattleFeature: React.FC<TrendBattleFeatureProps> = ({
               <Scale className="h-4 w-4" aria-hidden="true" />
               <span>Trend Battle</span>
             </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
-              Compare Relative Topic Interest
-            </h2>
+            {mode === 'page' ? (
+              <h1 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                Compare Relative Topic Interest
+              </h1>
+            ) : (
+              <h2 className="font-display text-2xl sm:text-3xl font-semibold text-slate-900">
+                Compare Relative Topic Interest
+              </h2>
+            )}
             <p className="mt-1.5 text-sm text-slate-600 max-w-2xl">
               Compare public attention trajectories, peak interest dates, and related search
               queries using verified Wikimedia Pageviews &amp; Google Suggest data.
@@ -180,14 +187,18 @@ export const TrendBattleFeature: React.FC<TrendBattleFeatureProps> = ({
             </button>
 
             {mode === 'section' && (
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'trend-battle' })}
+              <a
+                href={routeToUrl({ view: 'trend-battle' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'trend-battle' });
+                }}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#0b1324] px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-800 cursor-pointer"
               >
                 <span>Open Trend Battle Page</span>
                 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
+              </a>
             )}
           </div>
         </div>

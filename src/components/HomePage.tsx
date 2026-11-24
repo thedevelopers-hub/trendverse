@@ -19,6 +19,7 @@ import {
 } from '../../server/types';
 import { AppRoute, Article, EditorialDraft, ToolId } from '../types/editorial';
 import { EDITORIAL_CATEGORIES } from '../data/categories';
+import { routeToUrl } from '../utils/routes';
 import { formatPublicationTimestamp, formatRelativeTime } from '../utils/timeFormat';
 import { VisitorActivityState } from '../utils/visitorActivity';
 import { EditorialVisual } from './EditorialVisual';
@@ -212,6 +213,12 @@ export const HomePage: React.FC<HomePageProps> = ({
     setEmail('');
   };
 
+  const handleSpaNav = (e: React.MouseEvent, route: AppRoute) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onNavigate(route);
+  };
+
   return (
     <div>
       {/* 2. Live Date, Time & World Clock */}
@@ -235,20 +242,20 @@ export const HomePage: React.FC<HomePageProps> = ({
               </p>
               <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
                 {liveBlogTitle && <span>Connected Blogger Feed: {liveBlogTitle}</span>}
-                <button
-                  type="button"
-                  onClick={() => onNavigate({ view: 'ai-center' })}
+                <a
+                  href={routeToUrl({ view: 'ai-center' })}
+                  onClick={(e) => handleSpaNav(e, { view: 'ai-center' })}
                   className="hover:text-white underline underline-offset-4 cursor-pointer"
                 >
                   AI Intelligence Center
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigate({ view: 'blogger-hub' })}
+                </a>
+                <a
+                  href={routeToUrl({ view: 'blogger-hub' })}
+                  onClick={(e) => handleSpaNav(e, { view: 'blogger-hub' })}
                   className="hover:text-white underline underline-offset-4 cursor-pointer"
                 >
                   Blogger Theme &amp; Drafts
-                </button>
+                </a>
               </div>
             </div>
 
@@ -273,28 +280,29 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </div>
 
                 <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate({ view: 'article', slug: heroArticle.slug })}
+                  <a
+                    href={routeToUrl({ view: 'article', slug: heroArticle.slug })}
+                    onClick={(e) => handleSpaNav(e, { view: 'article', slug: heroArticle.slug })}
                     className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition-colors cursor-pointer"
                   >
                     <span>Read Editorial</span>
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate({ view: 'briefing' })}
+                  </a>
+                  <a
+                    href={routeToUrl({ view: 'briefing' })}
+                    onClick={(e) => handleSpaNav(e, { view: 'briefing' })}
                     className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-4 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/10 transition-colors cursor-pointer"
                   >
                     Your World in 60s
-                  </button>
+                  </a>
                 </div>
               </div>
 
               <div className="lg:col-span-4">
-                <button
-                  type="button"
-                  onClick={() => onNavigate({ view: 'article', slug: heroArticle.slug })}
+                <a
+                  href={routeToUrl({ view: 'article', slug: heroArticle.slug })}
+                  onClick={(e) => handleSpaNav(e, { view: 'article', slug: heroArticle.slug })}
+                  aria-label={`Read featured editorial: ${heroArticle.title}`}
                   className="group block w-full h-full overflow-hidden rounded-xl border border-white/10 text-left cursor-pointer"
                 >
                   <EditorialVisual
@@ -304,7 +312,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     aspectClass="aspect-[16/10] lg:h-full"
                     priority
                   />
-                </button>
+                </a>
               </div>
 
               <div className="lg:col-span-3 rounded-xl border border-white/10 bg-[#13203b]/60 p-4 flex flex-col justify-between">
@@ -343,14 +351,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </div>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onNavigate({ view: 'news-center' })}
+                <a
+                  href={routeToUrl({ view: 'news-center' })}
+                  onClick={(e) => handleSpaNav(e, { view: 'news-center' })}
                   className="mt-3 pt-2.5 border-t border-white/10 inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
                 >
                   <span>Browse all 10 news desks</span>
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -429,13 +437,13 @@ export const HomePage: React.FC<HomePageProps> = ({
           <h2 className="font-display text-2xl font-semibold text-slate-900">
             Global Coverage by Desk
           </h2>
-          <button
-            type="button"
-            onClick={() => onNavigate({ view: 'news-center' })}
+          <a
+            href={routeToUrl({ view: 'news-center' })}
+            onClick={(e) => handleSpaNav(e, { view: 'news-center' })}
             className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
           >
             Open Full News Center →
-          </button>
+          </a>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -509,11 +517,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {EDITORIAL_CATEGORIES.map((cat) => (
-                <button
+                <a
                   key={cat.slug}
-                  type="button"
-                  onClick={() => onNavigate({ view: 'category', slug: cat.slug })}
-                  className="group rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-blue-500 transition-colors cursor-pointer"
+                  href={routeToUrl({ view: 'category', slug: cat.slug })}
+                  onClick={(e) => handleSpaNav(e, { view: 'category', slug: cat.slug })}
+                  className="group block rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-blue-500 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="font-display text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
@@ -524,7 +532,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <p className="mt-2 text-xs leading-relaxed text-slate-600">
                     {cat.shortDescription}
                   </p>
-                </button>
+                </a>
               ))}
             </div>
           </div>
@@ -557,10 +565,10 @@ export const HomePage: React.FC<HomePageProps> = ({
 
               <div className="divide-y divide-slate-100">
                 {discoverList.map((item, idx) => (
-                  <button
+                  <a
                     key={item.id}
-                    type="button"
-                    onClick={() => onNavigate({ view: 'article', slug: item.slug })}
+                    href={routeToUrl({ view: 'article', slug: item.slug })}
+                    onClick={(e) => handleSpaNav(e, { view: 'article', slug: item.slug })}
                     className="flex w-full items-start gap-4 py-3.5 text-left hover:bg-slate-50 px-2 rounded-lg transition-colors cursor-pointer"
                   >
                     <span className="font-mono-tabular text-sm font-semibold text-blue-600 mt-0.5">
@@ -574,7 +582,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                         {item.title}
                       </div>
                     </div>
-                  </button>
+                  </a>
                 ))}
               </div>
             </div>
@@ -596,25 +604,25 @@ export const HomePage: React.FC<HomePageProps> = ({
               Fast, browser-local calculators and text utilities. Zero server uploads or sign-up required.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => onNavigate({ view: 'tools', toolId: 'word-counter' })}
+          <a
+            href={routeToUrl({ view: 'tools', toolId: 'word-counter' })}
+            onClick={(e) => handleSpaNav(e, { view: 'tools', toolId: 'word-counter' })}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 cursor-pointer shrink-0"
           >
             <span>Open Full Tool Suite</span>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
+          </a>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {TOOL_CARDS.map((tool) => {
             const Icon = tool.icon;
             return (
-              <button
+              <a
                 key={tool.id}
-                type="button"
-                onClick={() => onNavigate({ view: 'tools', toolId: tool.id })}
-                className="group rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-blue-500 transition-colors cursor-pointer"
+                href={routeToUrl({ view: 'tools', toolId: tool.id })}
+                onClick={(e) => handleSpaNav(e, { view: 'tools', toolId: tool.id })}
+                className="group block rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-blue-500 transition-colors cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
@@ -624,7 +632,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </div>
                 <h3 className="text-base font-semibold text-slate-900">{tool.name}</h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-slate-600">{tool.description}</p>
-              </button>
+              </a>
             );
           })}
         </div>
@@ -649,10 +657,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <div className="flex items-start gap-3 rounded-xl border border-blue-400/40 bg-blue-950/50 p-4 text-sm text-slate-100">
                   <Check className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
-                    <p className="font-semibold">Subscription preference recorded</p>
+                    <p className="font-semibold">Digest preference saved in browser</p>
                     <p className="mt-1 text-xs text-slate-300">
-                      Preview confirmation saved locally. Connect your Blogger Feedburner or email
-                      provider endpoint in production to dispatch digests.
+                      Your digest preference has been recorded locally on this device. No external
+                      mailing-list record is transmitted automatically.
                     </p>
                   </div>
                 </div>
@@ -684,13 +692,15 @@ export const HomePage: React.FC<HomePageProps> = ({
                   )}
                   <p className="text-[11px] text-slate-400">
                     Read our{' '}
-                    <button
-                      type="button"
-                      onClick={() => onNavigate({ view: 'policy', pageId: 'privacy-policy' })}
+                    <a
+                      href={routeToUrl({ view: 'policy', pageId: 'privacy-policy' })}
+                      onClick={(e) =>
+                        handleSpaNav(e, { view: 'policy', pageId: 'privacy-policy' })
+                      }
                       className="underline hover:text-white cursor-pointer"
                     >
                       Privacy Policy
-                    </button>{' '}
+                    </a>{' '}
                     before subscribing.
                   </p>
                 </form>

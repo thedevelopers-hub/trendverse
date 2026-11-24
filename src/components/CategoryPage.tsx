@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { AppRoute, Article, CategorySlug } from '../types/editorial';
 import { EDITORIAL_CATEGORIES, getCategoryBySlug } from '../data/categories';
+import { routeToUrl } from '../utils/routes';
 import { EditorialVisual } from './EditorialVisual';
 import { AdSlot } from './AdSlot';
 
@@ -24,18 +25,25 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ slug, articles, onNa
     );
   }, [articles, category.slug, filterText]);
 
+  const handleSpaNav = (e: React.MouseEvent, route: AppRoute, resetFilter = false) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    if (resetFilter) setFilterText('');
+    onNavigate(route);
+  };
+
   return (
     <div>
       <section className="bg-[#0b1324] text-white border-b border-white/10 py-12">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
           <nav aria-label="Breadcrumb" className="text-xs text-slate-400 mb-4">
-            <button
-              type="button"
-              onClick={() => onNavigate({ view: 'home' })}
+            <a
+              href="/"
+              onClick={(e) => handleSpaNav(e, { view: 'home' })}
               className="hover:text-white cursor-pointer"
             >
               Home
-            </button>{' '}
+            </a>{' '}
             / <span className="text-slate-200">{category.name}</span>
           </nav>
           <h1 className="font-display text-3xl sm:text-4xl font-semibold text-white">
@@ -47,13 +55,10 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ slug, articles, onNa
 
           <div className="mt-6 flex flex-wrap gap-2">
             {EDITORIAL_CATEGORIES.map((cat) => (
-              <button
+              <a
                 key={cat.slug}
-                type="button"
-                onClick={() => {
-                  setFilterText('');
-                  onNavigate({ view: 'category', slug: cat.slug });
-                }}
+                href={routeToUrl({ view: 'category', slug: cat.slug })}
+                onClick={(e) => handleSpaNav(e, { view: 'category', slug: cat.slug }, true)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
                   cat.slug === category.slug
                     ? 'bg-blue-600 text-white'
@@ -61,7 +66,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ slug, articles, onNa
                 }`}
               >
                 {cat.name}
-              </button>
+              </a>
             ))}
           </div>
         </div>
@@ -92,52 +97,91 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ slug, articles, onNa
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            {categoryArticles.map((article) => (
-              <article
-                key={article.id}
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => onNavigate({ view: 'article', slug: article.slug })}
-                  className="block w-full text-left cursor-pointer"
+            {categoryArticles.map((article) => {
+              const articleUrl = routeToUrl({ view: 'article', slug: article.slug });
+              return (
+                <article
+                  key={article.id}
+                  className="group overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-colors"
                 >
-                  <EditorialVisual
-                    motif={article.visualMotif}
-                    imageUrl={article.imageUrl}
-                    alt={article.imageAlt}
-                    aspectClass="aspect-[16/9]"
-                  />
-                </button>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                    <time dateTime={article.publishedAt}>{article.publishedAt}</time>
-                    <span aria-hidden="true">·</span>
-                    <span>{article.readTimeMinutes} min read</span>
-                  </div>
-                  <h2 className="font-display text-xl font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
-                    <button
-                      type="button"
-                      onClick={() => onNavigate({ view: 'article', slug: article.slug })}
-                      className="text-left cursor-pointer"
-                    >
-                      {article.title}
-                    </button>
-                  </h2>
-                  <p className="mt-2.5 text-sm text-slate-600">{article.summary}</p>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate({ view: 'article', slug: article.slug })}
-                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 cursor-pointer"
+                  <a
+                    href={articleUrl}
+                    onClick={(e) => handleSpaNav(e, { view: 'article', slug: article.slug })}
+                    className="block w-full text-left cursor-pointer"
                   >
-                    <span>Read explainer</span>
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </article>
-            ))}
+                    <EditorialVisual
+                      motif={article.visualMotif}
+                      imageUrl={article.imageUrl}
+                      alt={article.imageAlt}
+                      aspectClass="aspect-[16/9]"
+                    />
+                  </a>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                      <time dateTime={article.publishedAt}>{article.publishedAt}</time>
+                      <span aria-hidden="true">·</span>
+                      <span>{article.readTimeMinutes} min read</span>
+                    </div>
+                    <h2 className="font-display text-xl font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                      <a
+                        href={articleUrl}
+                        onClick={(e) => handleSpaNav(e, { view: 'article', slug: article.slug })}
+                        className="text-left cursor-pointer"
+                      >
+                        {article.title}
+                      </a>
+                    </h2>
+                    <p className="mt-2.5 text-sm text-slate-600">{article.summary}</p>
+                    <a
+                      href={articleUrl}
+                      onClick={(e) => handleSpaNav(e, { view: 'article', slug: article.slug })}
+                      className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 cursor-pointer"
+                    >
+                      <span>Read explainer</span>
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
+
+        <section className="mt-10 rounded-xl border border-slate-200 bg-slate-50 p-6">
+          <h2 className="font-display text-lg font-semibold text-slate-900 mb-3">
+            Related Platforms &amp; Reference Hubs
+          </h2>
+          <div className="flex flex-wrap gap-3 text-xs font-medium">
+            <a
+              href={routeToUrl({ view: 'news-center' })}
+              onClick={(e) => handleSpaNav(e, { view: 'news-center' })}
+              className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-slate-800 hover:border-blue-500 hover:text-blue-700"
+            >
+              Live Global News Center
+            </a>
+            <a
+              href={routeToUrl({ view: 'ai-center' })}
+              onClick={(e) => handleSpaNav(e, { view: 'ai-center' })}
+              className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-slate-800 hover:border-blue-500 hover:text-blue-700"
+            >
+              AI Intelligence Center
+            </a>
+            <a
+              href={routeToUrl({ view: 'tools', toolId: 'word-counter' })}
+              onClick={(e) => handleSpaNav(e, { view: 'tools', toolId: 'word-counter' })}
+              className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-slate-800 hover:border-blue-500 hover:text-blue-700"
+            >
+              Free Online Tools
+            </a>
+            <a
+              href={routeToUrl({ view: 'careers', tab: 'overview' })}
+              onClick={(e) => handleSpaNav(e, { view: 'careers', tab: 'overview' })}
+              className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-slate-800 hover:border-blue-500 hover:text-blue-700"
+            >
+              TRENDVERSE CAREERS
+            </a>
+          </div>
+        </section>
 
         <div className="mt-10">
           <AdSlot variant="leaderboard" slotName={`category-${category.slug}`} />

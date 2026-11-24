@@ -46,6 +46,7 @@ import {
   saveCareersProfile,
 } from '../../utils/careerPreferences';
 import { formatRelativeTime } from '../../utils/timeFormat';
+import { routeToUrl } from '../../utils/routes';
 import { AdSlot } from '../AdSlot';
 import { JobListingCard } from './JobListingCard';
 import { CareerToolsSuite } from './CareerToolsSuite';
@@ -538,21 +539,29 @@ export const CareersPortal: React.FC<CareersPortalProps> = ({
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-8">
           {/* Breadcrumb */}
           <nav aria-label="Breadcrumb" className="text-xs text-slate-400 mb-3 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onNavigate({ view: 'home' })}
+            <a
+              href="/"
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onNavigate({ view: 'home' });
+              }}
               className="hover:text-white cursor-pointer"
             >
               TRENDVERSE Home
-            </button>
+            </a>
             <span>/</span>
-            <button
-              type="button"
-              onClick={() => onNavigate({ view: 'careers', tab: 'overview' })}
+            <a
+              href="/careers"
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onNavigate({ view: 'careers', tab: 'overview' });
+              }}
               className="hover:text-white cursor-pointer"
             >
               Careers
-            </button>
+            </a>
             {activeTab !== 'overview' && (
               <>
                 <span>/</span>
@@ -648,12 +657,16 @@ export const CareersPortal: React.FC<CareersPortalProps> = ({
               const Icon = t.icon;
               const isActive = activeTab === t.id;
               return (
-                <button
+                <a
                   key={t.id}
-                  type="button"
+                  href={t.path}
                   role="tab"
                   aria-selected={isActive}
-                  onClick={() => onNavigate({ view: 'careers', tab: t.id })}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                    e.preventDefault();
+                    onNavigate({ view: 'careers', tab: t.id });
+                  }}
                   className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                     isActive
                       ? 'bg-blue-600 text-white'
@@ -662,7 +675,7 @@ export const CareersPortal: React.FC<CareersPortalProps> = ({
                 >
                   <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>{t.label}</span>
-                </button>
+                </a>
               );
             })}
           </div>
@@ -801,77 +814,101 @@ export const CareersPortal: React.FC<CareersPortalProps> = ({
           <div className="space-y-8">
             {/* Live Dashboard Stats Grid */}
             <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'careers', tab: 'jobs' })}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
+              <a
+                href={routeToUrl({ view: 'careers', tab: 'jobs' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'careers', tab: 'jobs' });
+                }}
+                className="block rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
               >
                 <p className="text-xs text-slate-500">Live Job Updates</p>
                 <p className="mt-1 font-mono-tabular text-2xl font-bold text-slate-900">
                   {jobsLoading ? '…' : allJobs.length}
                 </p>
                 <p className="mt-1 text-[11px] font-medium text-blue-700">Search all jobs →</p>
-              </button>
+              </a>
 
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'careers', tab: 'internships' })}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
+              <a
+                href={routeToUrl({ view: 'careers', tab: 'internships' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'careers', tab: 'internships' });
+                }}
+                className="block rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
               >
                 <p className="text-xs text-slate-500">Internships &amp; Student</p>
                 <p className="mt-1 font-mono-tabular text-2xl font-bold text-slate-900">
                   {jobsLoading ? '…' : internshipsAll.length}
                 </p>
                 <p className="mt-1 text-[11px] font-medium text-blue-700">Student internships →</p>
-              </button>
+              </a>
 
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'careers', tab: 'remote' })}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
+              <a
+                href={routeToUrl({ view: 'careers', tab: 'remote' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'careers', tab: 'remote' });
+                }}
+                className="block rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
               >
                 <p className="text-xs text-slate-500">Remote Eligible</p>
                 <p className="mt-1 font-mono-tabular text-2xl font-bold text-slate-900">
                   {jobsLoading ? '…' : remoteAll.length}
                 </p>
                 <p className="mt-1 text-[11px] font-medium text-blue-700">Explore remote →</p>
-              </button>
+              </a>
 
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'careers', tab: 'fresher' })}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
+              <a
+                href={routeToUrl({ view: 'careers', tab: 'fresher' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'careers', tab: 'fresher' });
+                }}
+                className="block rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
               >
                 <p className="text-xs text-slate-500">Fresher / Entry Roles</p>
                 <p className="mt-1 font-mono-tabular text-2xl font-bold text-slate-900">
                   {jobsLoading ? '…' : fresherAndEntryJobs.length}
                 </p>
                 <p className="mt-1 text-[11px] font-medium text-blue-700">Student Center →</p>
-              </button>
+              </a>
 
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'careers', tab: 'scholarships' })}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
+              <a
+                href={routeToUrl({ view: 'careers', tab: 'scholarships' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'careers', tab: 'scholarships' });
+                }}
+                className="block rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
               >
                 <p className="text-xs text-slate-500">Scholarships &amp; Grants</p>
                 <p className="mt-1 font-mono-tabular text-2xl font-bold text-slate-900">
                   {(scholarshipsData?.items.length ?? 0) + (scholarshipsData?.directory.length ?? 0)}
                 </p>
                 <p className="mt-1 text-[11px] font-medium text-blue-700">View scholarships →</p>
-              </button>
+              </a>
 
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'careers', tab: 'government' })}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
+              <a
+                href={routeToUrl({ view: 'careers', tab: 'government' })}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onNavigate({ view: 'careers', tab: 'government' });
+                }}
+                className="block rounded-xl border border-slate-200 bg-white p-4 text-left hover:border-blue-400 cursor-pointer"
               >
                 <p className="text-xs text-slate-500">Gov Portals &amp; Notices</p>
                 <p className="mt-1 font-mono-tabular text-2xl font-bold text-slate-900">
                   {(govData?.items.length ?? 0) + (govData?.portals.length ?? 0)}
                 </p>
                 <p className="mt-1 text-[11px] font-medium text-blue-700">India &amp; Global Gov →</p>
-              </button>
+              </a>
             </section>
 
             {/* Trending Career Skills Extracted Live */}
