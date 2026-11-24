@@ -12,10 +12,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const policyLinks: Array<{ id: PolicyPageId; label: string }> = [
     { id: 'about', label: 'About' },
     { id: 'contact', label: 'Contact' },
+    { id: 'editorial-policy', label: 'Editorial Policy' },
+    { id: 'corrections-policy', label: 'Corrections Policy' },
     { id: 'privacy-policy', label: 'Privacy Policy' },
     { id: 'terms-and-conditions', label: 'Terms and Conditions' },
     { id: 'disclaimer', label: 'Disclaimer' },
-    { id: 'editorial-policy', label: 'Editorial Policy' },
   ];
 
   const handleNavClick = (e: React.MouseEvent, route: AppRoute) => {

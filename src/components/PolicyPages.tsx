@@ -86,12 +86,11 @@ export const PolicyPages: React.FC<PolicyPagesProps> = ({ pageId, onNavigate }) 
             </section>
           )}
 
-          {(pageId === 'about' || pageId === 'editorial-policy') && (
+          {(pageId === 'about' || pageId === 'editorial-policy' || pageId === 'corrections-policy') && (
             <section
               aria-label="Founder and Publisher Profile"
               className="rounded-xl border border-slate-200 bg-slate-50 p-6 flex flex-col gap-5 sm:flex-row sm:items-center"
             >
-              {/* Optional profile image container — shows crisp editorial monogram unless replaced with a custom Blogger/CDN portrait URL */}
               <div
                 aria-hidden="true"
                 className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-[#0b1324] font-display text-3xl font-bold text-white"
@@ -100,16 +99,34 @@ export const PolicyPages: React.FC<PolicyPagesProps> = ({ pageId, onNavigate }) 
               </div>
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-                  Founder Profile &amp; Website Credits
+                  Founder Profile &amp; Website Ownership
                 </p>
                 <h2 className="font-display text-xl font-bold text-slate-900">
-                  {FOUNDER_BRAND_IDENTITY.founderName} — Founder &amp; Developer
+                  {FOUNDER_BRAND_IDENTITY.founderName} — Founder, Developer &amp; Managing Editor
                 </h2>
                 <p className="text-xs font-medium text-slate-600">
                   Publisher: {FOUNDER_BRAND_IDENTITY.publisherName} · {FOUNDER_BRAND_IDENTITY.brandName} ({FOUNDER_BRAND_IDENTITY.tagline})
                 </p>
                 <p className="text-sm leading-relaxed text-slate-700">
                   {FOUNDER_BRAND_IDENTITY.platformNote}
+                </p>
+                <p className="text-xs text-slate-600">
+                  Contact:{' '}
+                  <a
+                    href={`mailto:${FOUNDER_BRAND_IDENTITY.contactEmail}`}
+                    className="font-medium text-blue-600 hover:underline"
+                  >
+                    {FOUNDER_BRAND_IDENTITY.contactEmail}
+                  </a>{' '}
+                  · Source:{' '}
+                  <a
+                    href={FOUNDER_BRAND_IDENTITY.repositoryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-600 hover:underline"
+                  >
+                    GitHub Repository
+                  </a>
                 </p>
               </div>
             </section>

@@ -315,11 +315,14 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
         .join('')}</ul></section>`
     : '';
 
+  const isDraft = article.editorialStatus === 'draft-pending-review';
+  const authorType = article.authorId === 'vicky' ? 'Person' : 'Organization';
+
   return {
     title,
     description,
     canonicalUrl,
-    robots: 'index, follow, max-image-preview:large',
+    robots: isDraft ? 'noindex, follow' : 'index, follow, max-image-preview:large',
     ogType: 'article',
     author: article.authorName || FOUNDER_BRAND_IDENTITY.founderName,
     publishedTime: article.publishedAt,
@@ -341,10 +344,26 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
           inLanguage: 'en',
           articleSection: article.categoryName,
           keywords: article.labels.join(', '),
-          author: {
-            '@type': 'Organization',
-            name: article.authorName,
-          },
+          author:
+            authorType === 'Person'
+              ? {
+                  '@type': 'Person',
+                  '@id': `${origin}/#founder-vicky`,
+                  name: article.authorName,
+                }
+              : {
+                  '@type': 'Organization',
+                  name: article.authorName,
+                },
+          ...(article.reviewedBy
+            ? {
+                editor: {
+                  '@type': 'Person',
+                  '@id': `${origin}/#founder-vicky`,
+                  name: FOUNDER_BRAND_IDENTITY.founderName,
+                },
+              }
+            : {}),
           publisher: {
             '@type': 'Organization',
             '@id': `${origin}/#organization`,
@@ -906,8 +925,9 @@ export function getIndexableSitemapEntries(
     });
   }
 
-  // Evergreen articles
+  // Evergreen human-reviewed articles (unpublished drafts excluded from sitemap)
   for (const article of EVERGREEN_ARTICLES) {
+    if (article.editorialStatus === 'draft-pending-review') continue;
     entries.push({
       loc: `${origin}/article/${encodeURIComponent(article.slug)}`,
       lastmod: article.updatedAt || article.publishedAt || todayIso,
@@ -920,7 +940,7 @@ export function getIndexableSitemapEntries(
   for (const pageId of Object.keys(POLICY_PAGES) as PolicyPageId[]) {
     entries.push({
       loc: `${origin}/policy/${pageId}`,
-      lastmod: '2026-11-01',
+      lastmod: '2026-11-24',
       changefreq: 'monthly',
       priority: '0.5',
     });

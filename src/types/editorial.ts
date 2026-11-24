@@ -28,6 +28,28 @@ export interface ArticleSource {
   url: string;
 }
 
+export interface ArticleEditorialContext {
+  whatHappened: string;
+  whyItMatters: string;
+  whatReadersShouldUnderstand: string;
+}
+
+export type ArticleEditorialStatus =
+  | 'human-reviewed'
+  | 'needs-editorial-verification'
+  | 'draft-pending-review';
+
+export interface AuthorProfile {
+  id: string;
+  name: string;
+  type: 'Person' | 'Organization';
+  role: string;
+  bio: string;
+  responsibilities: string[];
+  contactEmail?: string;
+  repositoryUrl?: string;
+}
+
 export interface Article {
   id: string;
   slug: string;
@@ -37,8 +59,14 @@ export interface Article {
   category: CategorySlug;
   categoryName: string;
   labels: string[];
+  authorId?: string;
   authorName: string;
   authorRole: string;
+  reviewedBy?: string;
+  lastReviewedAt?: string;
+  editorialStatus?: ArticleEditorialStatus;
+  correctionNote?: string;
+  editorialContext?: ArticleEditorialContext;
   publishedAt: string;
   updatedAt: string;
   readTimeMinutes: number;
@@ -71,7 +99,8 @@ export type PolicyPageId =
   | 'privacy-policy'
   | 'terms-and-conditions'
   | 'disclaimer'
-  | 'editorial-policy';
+  | 'editorial-policy'
+  | 'corrections-policy';
 
 export type CareersTab =
   | 'overview'

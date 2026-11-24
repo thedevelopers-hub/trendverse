@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, ExternalLink, Link2, Share2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ExternalLink, FileCheck2, Link2, Share2 } from 'lucide-react';
 import { AppRoute, Article } from '../types/editorial';
+import { getAuthorProfile } from '../data/authors';
+import { routeToUrl } from '../utils/routes';
 import { EditorialVisual } from './EditorialVisual';
 import { AdSlot } from './AdSlot';
 
@@ -12,15 +14,26 @@ interface ArticlePageProps {
 
 export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, onNavigate }) => {
   const [copied, setCopied] = useState(false);
+  const authorProfile = getAuthorProfile(article.authorId);
 
+  // Show related articles ONLY when genuinely relevant (same desk or shared topic labels)
   const relatedArticles = useMemo(() => {
-    const sameCategory = allArticles.filter(
-      (a) => a.category === article.category && a.id !== article.id
+    const currentLabels = new Set(
+      article.labels.map((l) => l.toLowerCase()).filter((l) => l !== 'open standards')
     );
-    const others = allArticles.filter(
-      (a) => a.category !== article.category && a.id !== article.id
-    );
-    return [...sameCategory, ...others].slice(0, 3);
+    return allArticles
+      .filter((candidate) => candidate.id !== article.id)
+      .map((candidate) => {
+        const sameCategory = candidate.category === article.category ? 2 : 0;
+        const sharedLabels = candidate.labels.filter((l) =>
+          currentLabels.has(l.toLowerCase())
+        ).length;
+        return { candidate, score: sameCategory + sharedLabels };
+      })
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((entry) => entry.candidate);
   }, [allArticles, article]);
 
   const handleCopyLink = async () => {
@@ -33,28 +46,40 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, 
     }
   };
 
+  const handleSpaNav = (e: React.MouseEvent, route: AppRoute) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onNavigate(route);
+  };
+
   const shareUrl = encodeURIComponent(window.location.href);
   const shareTitle = encodeURIComponent(article.title);
+  const statusLabel =
+    article.editorialStatus === 'needs-editorial-verification'
+      ? 'Flagged for Editorial Verification'
+      : article.editorialStatus === 'draft-pending-review'
+      ? 'Draft Pending Human Review'
+      : 'Human-Reviewed Editorial Explainer';
 
   return (
     <article className="mx-auto max-w-[1200px] px-4 sm:px-6 py-10 lg:py-14">
       {/* Breadcrumb Navigation */}
       <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-        <button
-          type="button"
-          onClick={() => onNavigate({ view: 'home' })}
+        <a
+          href="/"
+          onClick={(e) => handleSpaNav(e, { view: 'home' })}
           className="hover:text-blue-600 cursor-pointer"
         >
           Home
-        </button>
+        </a>
         <span aria-hidden="true">/</span>
-        <button
-          type="button"
-          onClick={() => onNavigate({ view: 'category', slug: article.category })}
+        <a
+          href={routeToUrl({ view: 'category', slug: article.category })}
+          onClick={(e) => handleSpaNav(e, { view: 'category', slug: article.category })}
           className="hover:text-blue-600 cursor-pointer"
         >
           {article.categoryName}
-        </button>
+        </a>
         <span aria-hidden="true">/</span>
         <span className="text-slate-800 font-medium truncate max-w-xs sm:max-w-md">
           {article.title}
@@ -68,9 +93,13 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, 
           <span aria-hidden="true">·</span>
           <span>{article.readTimeMinutes} min read</span>
           <span aria-hidden="true">·</span>
-          <span>Published {article.publishedAt}</span>
+          <span>
+            Published <time dateTime={article.publishedAt}>{article.publishedAt}</time>
+          </span>
           <span aria-hidden="true">·</span>
-          <span>Updated {article.updatedAt}</span>
+          <span>
+            Updated <time dateTime={article.updatedAt}>{article.updatedAt}</time>
+          </span>
         </div>
 
         <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold leading-[1.14] text-slate-900">
@@ -85,12 +114,17 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, 
               aria-hidden="true"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0b1324] font-display text-sm font-bold text-white"
             >
-              TV
+              {authorProfile.type === 'Person' ? authorProfile.name.slice(0, 1).toUpperCase() : 'TV'}
             </div>
             <div>
               <div className="text-sm font-semibold text-slate-900">{article.authorName}</div>
               <div className="text-xs text-slate-500">
-                {article.authorRole} · Publisher: TRENDVERSE Editorial Team · Founded by Vicky
+                {article.authorRole}
+                {article.reviewedBy ? ` · Reviewed by ${article.reviewedBy}` : ''}
+              </div>
+              <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-blue-700">
+                <FileCheck2 className="h-3 w-3" aria-hidden="true" />
+                <span>{statusLabel}</span>
               </div>
             </div>
           </div>
@@ -151,6 +185,41 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, 
           {article.imageCaption}
         </figcaption>
       </figure>
+
+      {/* Editorial Brief: What Happened / Why It Matters / What Readers Should Understand */}
+      {article.editorialContext && (
+        <section
+          aria-label="Editorial Context Summary"
+          className="mb-10 rounded-xl border border-slate-200 bg-slate-50 p-5 sm:p-6"
+        >
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-blue-700 mb-1.5">
+                Context &amp; Background
+              </h2>
+              <p className="text-sm leading-relaxed text-slate-700">
+                {article.editorialContext.whatHappened}
+              </p>
+            </div>
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-blue-700 mb-1.5">
+                Why It Matters
+              </h2>
+              <p className="text-sm leading-relaxed text-slate-700">
+                {article.editorialContext.whyItMatters}
+              </p>
+            </div>
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-blue-700 mb-1.5">
+                What Readers Should Understand
+              </h2>
+              <p className="text-sm leading-relaxed text-slate-700">
+                {article.editorialContext.whatReadersShouldUnderstand}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Two-Column Reading Canvas: Sticky TOC + Article Prose */}
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
@@ -285,55 +354,110 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, 
                 </ul>
               </section>
             )}
+
+            {/* Author, Editorial Review & Corrections Notice */}
+            <section
+              aria-label="Authorship and editorial verification"
+              className="rounded-xl border border-slate-200 bg-white p-6 space-y-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="font-display text-lg font-semibold text-slate-900">
+                    About {authorProfile.name}
+                  </h2>
+                  <p className="text-xs font-medium text-blue-700">{authorProfile.role}</p>
+                </div>
+                <span className="text-xs font-medium text-slate-500">
+                  {statusLabel}
+                  {article.lastReviewedAt ? ` · Verified ${article.lastReviewedAt}` : ''}
+                </span>
+              </div>
+              <p className="text-sm leading-relaxed text-slate-600">{authorProfile.bio}</p>
+              {article.correctionNote && (
+                <p className="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-700">
+                  <strong>Revision Note:</strong> {article.correctionNote}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-4 pt-1 text-xs">
+                <a
+                  href="/policy/editorial-policy"
+                  onClick={(e) => handleSpaNav(e, { view: 'policy', pageId: 'editorial-policy' })}
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Editorial Policy
+                </a>
+                <a
+                  href="/policy/corrections-policy"
+                  onClick={(e) => handleSpaNav(e, { view: 'policy', pageId: 'corrections-policy' })}
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Corrections &amp; Attribution Policy
+                </a>
+                <a
+                  href="/policy/contact"
+                  onClick={(e) => handleSpaNav(e, { view: 'policy', pageId: 'contact' })}
+                  className="font-medium text-blue-600 hover:underline"
+                >
+                  Report an Error
+                </a>
+              </div>
+            </section>
           </div>
         </div>
       </div>
 
-      {/* Related Articles */}
-      <section className="mt-16 border-t border-slate-200 pt-10">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl font-semibold text-slate-900">Related Articles</h2>
-          <button
-            type="button"
-            onClick={() => onNavigate({ view: 'home' })}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            <span>Back to Home</span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {relatedArticles.map((rel) => (
-            <article
-              key={rel.id}
-              className="group rounded-xl border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors"
+      {/* Genuinely Relevant Related Articles */}
+      {relatedArticles.length > 0 && (
+        <section className="mt-16 border-t border-slate-200 pt-10">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-2xl font-semibold text-slate-900">
+              Related Explainers
+            </h2>
+            <a
+              href="/"
+              onClick={(e) => handleSpaNav(e, { view: 'home' })}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
             >
-              <div className="text-xs text-slate-500 mb-2">
-                <span className="font-semibold text-blue-600">{rel.categoryName}</span>{' '}
-                <span aria-hidden="true">·</span> {rel.publishedAt}
-              </div>
-              <h3 className="font-display text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
-                <button
-                  type="button"
-                  onClick={() => onNavigate({ view: 'article', slug: rel.slug })}
-                  className="text-left cursor-pointer"
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <span>Back to Home</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {relatedArticles.map((rel) => {
+              const relUrl = routeToUrl({ view: 'article', slug: rel.slug });
+              return (
+                <article
+                  key={rel.id}
+                  className="group rounded-xl border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors"
                 >
-                  {rel.title}
-                </button>
-              </h3>
-              <button
-                type="button"
-                onClick={() => onNavigate({ view: 'article', slug: rel.slug })}
-                className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 cursor-pointer"
-              >
-                <span>Read story</span>
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
-            </article>
-          ))}
-        </div>
-      </section>
+                  <div className="text-xs text-slate-500 mb-2">
+                    <span className="font-semibold text-blue-600">{rel.categoryName}</span>{' '}
+                    <span aria-hidden="true">·</span> {rel.publishedAt}
+                  </div>
+                  <h3 className="font-display text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    <a
+                      href={relUrl}
+                      onClick={(e) => handleSpaNav(e, { view: 'article', slug: rel.slug })}
+                      className="text-left cursor-pointer"
+                    >
+                      {rel.title}
+                    </a>
+                  </h3>
+                  <a
+                    href={relUrl}
+                    onClick={(e) => handleSpaNav(e, { view: 'article', slug: rel.slug })}
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 cursor-pointer"
+                  >
+                    <span>Read story</span>
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </a>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </article>
   );
 };

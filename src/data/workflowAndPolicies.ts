@@ -12,7 +12,7 @@ export const EDITORIAL_WORKFLOW_STEPS: EditorialWorkflowStep[] = [
     stepNumber: '02',
     title: 'Analyze Topic Relevance & Search Intent',
     owner: 'Research & Signals',
-    description: 'Evaluate whether readers seek a quick definition, an evergreen deep-dive explainer, or a practical online calculator/utility.',
+    description: 'Evaluate whether readers seek a clear definition, an evergreen deep-dive explainer, or a practical online calculator/utility.',
     guardrail: 'Ensure global English clarity and avoid unnecessary single-country assumptions.',
   },
   {
@@ -24,45 +24,45 @@ export const EDITORIAL_WORKFLOW_STEPS: EditorialWorkflowStep[] = [
   },
   {
     stepNumber: '04',
-    title: 'Generate Original Article Drafts',
+    title: 'Prepare Structured Original Drafts',
     owner: 'Editorial Drafting',
-    description: 'Use Google AI Studio to structure clear outlines and original prose grounded exclusively in verified source notes.',
-    guardrail: 'Prohibit copied text, spun articles, or speculative statements presented as fact.',
+    description: 'Use AI research tools strictly as a drafting aid to organize outlines and plain-language explanations grounded exclusively in verified source notes.',
+    guardrail: 'Prohibit copied text, spun articles, disguised AI boilerplate, or speculative claims presented as fact.',
   },
   {
     stepNumber: '05',
-    title: 'Suggest SEO Titles & Meta Descriptions',
+    title: 'Craft Accurate Titles & Meta Descriptions',
     owner: 'SEO & Structure',
-    description: 'Craft concise 50–60 character headlines and 140–155 character meta descriptions aligned with authentic reader search intent.',
-    guardrail: 'Avoid sensationalist clickbait or keyword stuffing.',
+    description: 'Write specific 50–60 character headlines and 120–160 character meta descriptions aligned with what the article actually proves and explains.',
+    guardrail: 'Avoid sensationalist clickbait, keyword stuffing, or misleading promises.',
   },
   {
     stepNumber: '06',
-    title: 'Suggest Relevant Internal Links',
+    title: 'Add Genuinely Relevant Internal Links',
     owner: 'SEO & Structure',
-    description: 'Connect explainers to related category archives and relevant TRENDVERSE Free Tools (for example, linking inflation articles to the Percentage Calculator).',
-    guardrail: 'Maintain natural anchor text that genuinely helps the reader.',
+    description: 'Link explainers only to closely related articles, category archives, or TRENDVERSE utilities that genuinely help the reader apply the concept.',
+    guardrail: 'Never pad related-article modules with unrelated topics.',
   },
   {
     stepNumber: '07',
     title: 'Check Factual Accuracy & Schema Eligibility',
     owner: 'Human Review',
-    description: 'Verify every date, numeric figure, source URL, and Schema.org classification (using Article for explainers and NewsArticle strictly for original news reporting).',
-    guardrail: 'Reject any claim lacking a verifiable primary reference.',
+    description: 'Verify every date, numeric claim, source URL, and Schema.org classification (Article for evergreen explainers; NewsArticle strictly for verified original news reporting).',
+    guardrail: 'Reject or flag any claim lacking a verifiable primary reference.',
   },
   {
     stepNumber: '08',
     title: 'Mandatory Human Editorial Approval',
     owner: 'Human Review',
-    description: 'A human editor reviews tone, accessibility, neutrality, image alt text, and AdSense policy compliance prior to scheduling.',
+    description: 'A human editor reviews factual accuracy, neutrality, readability, image alt text, and AdSense policy compliance. Unpublished drafts stay excluded from sitemap.xml and search indexing.',
     guardrail: 'Never automatically publish unverified breaking news or unreviewed AI output.',
   },
   {
     stepNumber: '09',
-    title: 'Publish & Index via Blogger',
+    title: 'Publish, Attribute & Maintain Corrections',
     owner: 'Publishing',
-    description: 'Publish with clean permalink slugs, assigned category labels, canonical metadata, and updated Blogger XML sitemap ping.',
-    guardrail: 'Monitor Search Console indexing and Core Web Vitals post-publication.',
+    description: 'Publish with author attribution, original publication date, genuine update date, and visible primary source citations, updating records transparently whenever corrections arise.',
+    guardrail: 'Only update lastmod when meaningful editorial revisions are made.',
   },
 ];
 
@@ -72,10 +72,12 @@ export const FOUNDER_BRAND_IDENTITY = {
   founderName: 'Vicky',
   developerName: 'Vicky',
   publisherName: 'TRENDVERSE Editorial Team',
+  contactEmail: 'vickykumar80299@gmail.com',
+  repositoryUrl: 'https://github.com/thedevelopers-hub/trendverse',
   aboutIntro:
     'TRENDVERSE is an independent global digital platform founded and developed by Vicky.\n\nOur mission is to make global news, emerging trends, artificial intelligence, technology, career opportunities and educational resources accessible to people around the world.',
   platformNote:
-    'Built with Google Blogger / Blogspot, GitHub source control, open web standards, and free public data feeds.',
+    'Built with React, TypeScript, Vercel Serverless infrastructure, Google Blogger / Blogspot compatibility, GitHub source control, and free public data feeds.',
 };
 
 export interface PolicyContent {
@@ -91,23 +93,24 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
     id: 'about',
     title: 'About TRENDVERSE',
     subtitle: 'Discover What’s Next — Founded & Developed by Vicky · Published by TRENDVERSE Editorial Team.',
-    lastUpdated: 'November 2026',
+    lastUpdated: 'November 24, 2026',
     sections: [
       {
         heading: 'Our Mission',
         body: [
           'TRENDVERSE is an independent global digital platform founded and developed by Vicky.',
           'Our mission is to make global news, emerging trends, artificial intelligence, technology, career opportunities and educational resources accessible to people around the world.',
-          'We organize explainers, live verified RSS headlines, global trend radar tools, international career pathways, scholarships, and fast browser utilities in clear international English for readers across the United States, the United Kingdom, India, Canada, Australia, Germany, Singapore, and worldwide.',
+          'We combine original evergreen explainers grounded in public institutional documentation, clearly attributed live international RSS feeds, global trend tracking, career resources, and browser-local productivity utilities.',
         ],
       },
       {
-        heading: 'Founder, Developer & Publishing Credits',
+        heading: 'Founder, Ownership & Contact Information',
         body: [
-          'Founder & Developer: Vicky',
+          'Founder, Owner & Developer: Vicky',
           'Publisher: TRENDVERSE Editorial Team',
-          'Open Source Repository: https://github.com/thedevelopers-hub/trendverse',
-          'TRENDVERSE is engineered for fast performance, accessibility, and editorial clarity using React, TypeScript, Vercel Edge/Serverless infrastructure, Google Blogger (Blogspot), and open web standards—operating strictly without mandatory paid APIs or subscriptions.',
+          'Direct Editorial & Ownership Email: vickykumar80299@gmail.com',
+          'Public Source Repository: https://github.com/thedevelopers-hub/trendverse',
+          'TRENDVERSE does not fabricate fictional newsroom staff, artificial author biographies, or undisclosed corporate parent entities. All human-reviewed articles clearly identify their desk or editor alongside primary sources.',
         ],
       },
     ],
@@ -115,13 +118,72 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
   contact: {
     id: 'contact',
     title: 'Contact TRENDVERSE',
-    subtitle: 'Reach our editorial desk for factual corrections, syndication inquiries, accessibility feedback, or partnership questions.',
-    lastUpdated: 'November 2026',
+    subtitle: 'Reach Founder Vicky and the TRENDVERSE Editorial Desk for corrections, source feedback, accessibility notes, or general inquiries.',
+    lastUpdated: 'November 24, 2026',
     sections: [
       {
-        heading: 'Editorial & Corrections Desk',
+        heading: 'Direct Contact & Corrections Desk',
         body: [
-          'Accuracy is foundational to our work. If you notice an outdated figure, broken source link, or technical issue in any article, career listing, or online tool, please submit a note using the form below or open an issue on our public repository (https://github.com/thedevelopers-hub/trendverse) so the TRENDVERSE Editorial Team and Founder Vicky can review and update the record transparently.',
+          'Editorial & Corrections Email: vickykumar80299@gmail.com',
+          'Public Technical & Editorial Issue Tracker: https://github.com/thedevelopers-hub/trendverse/issues',
+          'Accuracy is foundational to our work. If you spot an outdated statistic, ambiguous phrasing, broken external citation, or accessibility defect in any article, live feed attribution, or tool, write to vickykumar80299@gmail.com or submit the form below so we can review and update the page transparently.',
+        ],
+      },
+    ],
+  },
+  'editorial-policy': {
+    id: 'editorial-policy',
+    title: 'Editorial Policy & AI Workflow',
+    subtitle: 'Standards for source verification, human editorial review, live news attribution, and responsible AI assistance.',
+    lastUpdated: 'November 24, 2026',
+    sections: [
+      {
+        heading: 'Core Editorial Standards',
+        body: [
+          'TRENDVERSE maintains strict separation between editorial content and advertising. Ad placements are always labeled "Advertisement" and never influence editorial coverage, topic selection, or source attribution.',
+          'Every explainer article must clearly separate background context, verified factual evidence from named primary institutions, and editorial analysis. We never invent news events, statistics, quotes, reviews, ratings, or human author credentials.',
+        ],
+      },
+      {
+        heading: 'Live RSS Feeds vs. Original Articles',
+        body: [
+          'TRENDVERSE’s Live Global Wire and Live News Center display headlines, brief upstream feed excerpts, exact source publication timestamps, and direct links to original publishers (such as BBC News, NPR, The Hindu, NASA, Google AI Blog, MIT News AI, and UN News Climate).',
+          'We do not republish full third-party RSS articles as original TRENDVERSE reporting. When upstream feeds are temporarily unavailable, the interface displays an explicit unavailable state rather than fabricated headlines.',
+        ],
+      },
+      {
+        heading: 'AI-Assisted Research & Mandatory Human Review',
+        body: [
+          'AI tools may assist with organizing outlines, synthesizing multi-source reading briefings ("Your World in 60 Seconds"), or preparing initial research notes. Every evergreen article published on TRENDVERSE undergoes human editorial review for accuracy, primary-source verification, and clarity before entering the public sitemap.',
+          'AI-assisted daily briefings are explicitly labeled as AI-generated summaries tied to named RSS sources, and unpublished drafts remain excluded from public indexing.',
+        ],
+      },
+    ],
+  },
+  'corrections-policy': {
+    id: 'corrections-policy',
+    title: 'Corrections & Source Attribution Policy',
+    subtitle: 'How TRENDVERSE verifies primary sources, handles reader error reports, and documents factual updates transparently.',
+    lastUpdated: 'November 24, 2026',
+    sections: [
+      {
+        heading: '1. Reporting Errors or Broken Citations',
+        body: [
+          'Readers can report factual errors, outdated metrics, or broken external source links at any time by emailing vickykumar80299@gmail.com or opening an issue on https://github.com/thedevelopers-hub/trendverse.',
+          'Every report is reviewed by Founder & Managing Editor Vicky alongside the cited institutional documentation before changes are published.',
+        ],
+      },
+      {
+        heading: '2. How Corrections Are Documented',
+        body: [
+          'When a factual correction or substantive update is made to an article, TRENDVERSE updates the visible "Last Updated" date on the article header, updates the corresponding sitemap <lastmod> date, and displays an explicit Correction / Revision Note summarizing what changed.',
+          'Minor typographic or formatting fixes that do not alter meaning do not artificially bump editorial publication timestamps.',
+        ],
+      },
+      {
+        heading: '3. Primary Source Attribution Rules',
+        body: [
+          'All quantitative claims, definitions, and technical specifications must trace to identifiable public standards bodies, peer-reviewed research, multilateral statistical agencies, or official publisher releases linked in the article’s Sources & Primary References section.',
         ],
       },
     ],
@@ -130,7 +192,7 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
     id: 'privacy-policy',
     title: 'Privacy Policy',
     subtitle: 'How TRENDVERSE handles analytics, cookies, consent controls, third-party advertising disclosures, and browser-local utilities.',
-    lastUpdated: 'November 2026',
+    lastUpdated: 'November 24, 2026',
     sections: [
       {
         heading: '1. Information We Collect & Browser-Local Processing',
@@ -147,9 +209,9 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
         ],
       },
       {
-        heading: '3. International Data Rights (GDPR / CCPA Alignment)',
+        heading: '3. International Data Rights & Contact (GDPR / CCPA Alignment)',
         body: [
-          'International visitors (including readers in the EEA, UK, and California) have the right to decline non-essential analytics and advertising cookies, withdraw previously granted consent at any time, and request access to or deletion of any personal inquiry submitted directly through our editorial channels.',
+          'International visitors (including readers in the EEA, UK, and California) have the right to decline non-essential analytics and advertising cookies, withdraw previously granted consent at any time, and request access to or deletion of any personal inquiry sent to vickykumar80299@gmail.com.',
         ],
       },
     ],
@@ -158,7 +220,7 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
     id: 'terms-and-conditions',
     title: 'Terms & Conditions',
     subtitle: 'Guidelines governing the use of TRENDVERSE editorial content, downloadable Blogger templates, and free web utilities.',
-    lastUpdated: 'November 2026',
+    lastUpdated: 'November 24, 2026',
     sections: [
       {
         heading: '1. Acceptance of Terms',
@@ -183,41 +245,20 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
   disclaimer: {
     id: 'disclaimer',
     title: 'Disclaimer',
-    subtitle: 'Important scope clarifications regarding financial education, technical explainers, and utility calculations.',
-    lastUpdated: 'November 2026',
+    subtitle: 'Important scope clarifications regarding financial education, career/scholarship directories, and utility calculations.',
+    lastUpdated: 'November 24, 2026',
     sections: [
       {
         heading: 'Educational Content Only — Not Professional Advice',
         body: [
-          'All content published under Business & Finance, Technology & AI, Science & Space, World, Entertainment, and Lifestyle on TRENDVERSE is intended strictly for general informational and educational purposes.',
-          'Nothing on TRENDVERSE constitutes personalized financial, investment, tax, legal, or medical advice. Always consult qualified licensed professionals before making major financial or legal decisions.',
+          'All content published under Business & Finance, Technology & AI, Science & Space, World, Entertainment, Lifestyle, and Careers on TRENDVERSE is intended strictly for general informational and educational purposes.',
+          'Nothing on TRENDVERSE constitutes personalized financial, investment, tax, legal, immigration, or medical advice. Always consult qualified licensed professionals and official issuing institutions before making major financial, academic, or legal decisions.',
         ],
       },
       {
         heading: 'Utility Accuracy & External Links',
         body: [
-          'While our calculators and unit converters use standard mathematical formulas and SI conversion constants, users should verify critical engineering, academic, or financial figures independently. TRENDVERSE is not responsible for the content or availability of external institutional websites cited in reference sections.',
-        ],
-      },
-    ],
-  },
-  'editorial-policy': {
-    id: 'editorial-policy',
-    title: 'Editorial Policy & AI Workflow',
-    subtitle: 'Transparency in sourcing, human oversight, corrections, and our nine-step editorial production workflow.',
-    lastUpdated: 'November 2026',
-    sections: [
-      {
-        heading: 'Core Editorial Principles',
-        body: [
-          'TRENDVERSE maintains strict separation between editorial content and advertising. Sponsored placements or reserved AdSense slots are always clearly labeled as "Advertisement" and never influence editorial coverage.',
-          'Every factual article distinguishes between established consensus, primary source documentation, and evolving research. We never invent news events, synthetic reviews, ratings, or unverified author credentials.',
-        ],
-      },
-      {
-        heading: 'AI-Assisted Research with Mandatory Human Approval',
-        body: [
-          'TRENDVERSE leverages Google AI Studio strictly as a structured research and drafting aid within a nine-stage editorial pipeline. Every draft undergoes factual source verification, Schema.org validation, and final human editorial sign-off before publishing to Blogger. Automated publishing of unverified breaking news is strictly prohibited.',
+          'While our calculators and unit converters use standard mathematical formulas and SI conversion constants, users should verify critical engineering, academic, or financial figures independently. TRENDVERSE is not responsible for the content or availability of external institutional websites or third-party RSS publishers.',
         ],
       },
     ],

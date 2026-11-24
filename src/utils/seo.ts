@@ -174,8 +174,11 @@ export function applySeoForArticle(article: Article): void {
   const canonicalUrl = article.externalUrl || articleUrl;
   const categoryPath = `/search/label/${encodeURIComponent(article.categoryName)}`;
 
+  const isDraft = article.editorialStatus === 'draft-pending-review';
+  const authorType = article.authorId === 'vicky' ? 'Person' : 'Organization';
+
   document.title = title;
-  upsertRobots('index, follow, max-image-preview:large');
+  upsertRobots(isDraft ? 'noindex, follow' : 'index, follow, max-image-preview:large');
   applySharedSocialTags({
     title: article.title,
     description: desc,
@@ -203,10 +206,26 @@ export function applySeoForArticle(article: Article): void {
         inLanguage: 'en',
         articleSection: article.categoryName,
         keywords: article.labels.join(', '),
-        author: {
-          '@type': 'Organization',
-          name: article.authorName,
-        },
+        author:
+          authorType === 'Person'
+            ? {
+                '@type': 'Person',
+                '@id': `${origin}/#founder-vicky`,
+                name: article.authorName,
+              }
+            : {
+                '@type': 'Organization',
+                name: article.authorName,
+              },
+        ...(article.reviewedBy
+          ? {
+              editor: {
+                '@type': 'Person',
+                '@id': `${origin}/#founder-vicky`,
+                name: FOUNDER_BRAND_IDENTITY.founderName,
+              },
+            }
+          : {}),
         publisher: {
           '@type': 'Organization',
           '@id': `${origin}/#organization`,

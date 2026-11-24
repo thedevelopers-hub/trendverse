@@ -65,9 +65,10 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
             Verified International Feeds
           </h2>
           <p className="mt-1.5 text-sm text-slate-600 max-w-2xl">
-            Real headlines and permitted short summaries aggregated from BBC News, NPR, The Hindu,
-            NASA, Google AI Blog, MIT News AI, and UN News Climate with duplicate headline
-            filtering.
+            Reported external dispatches with original publisher attribution and publication
+            timestamps from BBC News, NPR, The Hindu, NASA, Google AI Blog, MIT News AI, and UN
+            News Climate. Headlines link directly to each source publication rather than republishing
+            full third-party articles.
           </p>
         </div>
 
