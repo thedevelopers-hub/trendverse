@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, Search, X } from 'lucide-react';
 import { AppRoute } from '../types/editorial';
+import { routeToUrl } from '../utils/routes';
 
 interface HeaderProps {
   currentRoute: AppRoute;
@@ -50,7 +51,11 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, onOpen
     },
   ];
 
-  const handleLinkClick = (route: AppRoute) => {
+  const handleLinkClick = (e: React.MouseEvent, route: AppRoute) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      return;
+    }
+    e.preventDefault();
     setMobileMenuOpen(false);
     onNavigate(route);
   };
@@ -59,21 +64,21 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, onOpen
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1324]/95 text-white backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-6 px-4 sm:px-6">
         {/* Zone 1: Single-line Brand Wordmark */}
-        <button
-          type="button"
-          onClick={() => handleLinkClick({ view: 'home' })}
+        <a
+          href="/"
+          onClick={(e) => handleLinkClick(e, { view: 'home' })}
           className="font-display text-xl font-bold tracking-wider text-white whitespace-nowrap shrink-0 cursor-pointer hover:text-blue-400 transition-colors"
         >
           TRENDVERSE
-        </button>
+        </a>
 
         {/* Zone 2: Concise single-line navigation links */}
         <nav aria-label="Primary navigation" className="hidden md:flex items-center gap-5">
           {navItems.map((item) => (
-            <button
+            <a
               key={item.label}
-              type="button"
-              onClick={() => handleLinkClick(item.route)}
+              href={routeToUrl(item.route)}
+              onClick={(e) => handleLinkClick(e, item.route)}
               className={`text-sm font-medium whitespace-nowrap shrink-0 cursor-pointer transition-colors underline-offset-8 ${
                 item.isActive
                   ? 'text-white underline decoration-blue-500 decoration-2'
@@ -81,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, onOpen
               }`}
             >
               {item.label}
-            </button>
+            </a>
           ))}
         </nav>
 
@@ -116,18 +121,18 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, onOpen
         >
           <div className="flex flex-col gap-1">
             {navItems.map((item) => (
-              <button
+              <a
                 key={item.label}
-                type="button"
-                onClick={() => handleLinkClick(item.route)}
-                className={`w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors cursor-pointer ${
+                href={routeToUrl(item.route)}
+                onClick={(e) => handleLinkClick(e, item.route)}
+                className={`block w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors cursor-pointer ${
                   item.isActive
                     ? 'bg-blue-600/20 text-white'
                     : 'text-slate-300 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {item.label}
-              </button>
+              </a>
             ))}
           </div>
         </nav>

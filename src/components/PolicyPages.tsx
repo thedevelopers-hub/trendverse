@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, SlidersHorizontal } from 'lucide-react';
 import { AppRoute, PolicyPageId } from '../types/editorial';
 import { EDITORIAL_WORKFLOW_STEPS, FOUNDER_BRAND_IDENTITY, POLICY_PAGES } from '../data/workflowAndPolicies';
+import { openConsentPreferences } from '../utils/consent';
 
 interface PolicyPagesProps {
   pageId: PolicyPageId;
@@ -32,13 +33,16 @@ export const PolicyPages: React.FC<PolicyPagesProps> = ({ pageId, onNavigate }) 
       <section className="bg-[#0b1324] text-white border-b border-white/10 py-12">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
           <nav aria-label="Breadcrumb" className="text-xs text-slate-400 mb-3">
-            <button
-              type="button"
-              onClick={() => onNavigate({ view: 'home' })}
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate({ view: 'home' });
+              }}
               className="hover:text-white cursor-pointer"
             >
               Home
-            </button>{' '}
+            </a>{' '}
             / <span className="text-slate-200">{page.title}</span>
           </nav>
           <h1 className="font-display text-3xl sm:text-4xl font-semibold text-white">
@@ -61,6 +65,26 @@ export const PolicyPages: React.FC<PolicyPagesProps> = ({ pageId, onNavigate }) 
               ))}
             </section>
           ))}
+
+          {pageId === 'privacy-policy' && (
+            <section className="rounded-xl border border-slate-200 bg-slate-50 p-6 max-w-prose">
+              <h2 className="font-display text-lg font-semibold text-slate-900">
+                Manage Your Consent Preferences
+              </h2>
+              <p className="mt-1.5 text-sm text-slate-600">
+                Update or withdraw consent for optional analytics and advertising partners at any
+                time.
+              </p>
+              <button
+                type="button"
+                onClick={() => openConsentPreferences()}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-500 transition-colors cursor-pointer"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Open Privacy &amp; Cookie Settings</span>
+              </button>
+            </section>
+          )}
 
           {(pageId === 'about' || pageId === 'editorial-policy') && (
             <section

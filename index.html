@@ -3,31 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1324" />
+    <!-- SEO_HEAD_START -->
     <title>TRENDVERSE — Discover What's Next | International Media &amp; Tools</title>
     <meta
       name="description"
-      content="TRENDVERSE delivers technology explainers, world affairs, business education, science discoveries, and free online utilities for global readers."
+      content="TRENDVERSE delivers technology explainers, world affairs, business education, science discoveries, careers intelligence, and free online utilities for global readers."
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <link rel="canonical" href="https://trendverse.example.com/" />
-
-    <!-- Open Graph -->
+    <meta name="author" content="Vicky — Founder &amp; Developer, TRENDVERSE" />
+    <link rel="canonical" href="https://trendverse-ten.vercel.app/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="TRENDVERSE" />
-    <meta property="og:title" content="TRENDVERSE — Discover What's Next" />
+    <meta property="og:title" content="TRENDVERSE — Discover What's Next | International Media &amp; Tools" />
     <meta
       property="og:description"
-      content="International digital media covering technology, world affairs, business education, science discoveries, and free web tools."
+      content="TRENDVERSE delivers technology explainers, world affairs, business education, science discoveries, careers intelligence, and free online utilities for global readers."
     />
+    <meta property="og:url" content="https://trendverse-ten.vercel.app/" />
     <meta property="og:locale" content="en_US" />
-
-    <!-- Twitter / X Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="TRENDVERSE — Discover What's Next" />
+    <meta name="twitter:title" content="TRENDVERSE — Discover What's Next | International Media &amp; Tools" />
     <meta
       name="twitter:description"
-      content="International digital media covering technology, world affairs, business education, science discoveries, and free web tools."
+      content="TRENDVERSE delivers technology explainers, world affairs, business education, science discoveries, careers intelligence, and free online utilities for global readers."
     />
+    <meta name="twitter:url" content="https://trendverse-ten.vercel.app/" />
+    <script type="application/ld+json" id="trendverse-route-schema">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://trendverse-ten.vercel.app/#founder-vicky",
+            "name": "Vicky",
+            "jobTitle": "Founder & Developer",
+            "description": "Founder and Developer of TRENDVERSE.",
+            "worksFor": { "@id": "https://trendverse-ten.vercel.app/#organization" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://trendverse-ten.vercel.app/#organization",
+            "name": "TRENDVERSE",
+            "url": "https://trendverse-ten.vercel.app/",
+            "description": "Discover What's Next. An independent global digital platform founded and developed by Vicky.",
+            "slogan": "Discover What's Next.",
+            "founder": { "@id": "https://trendverse-ten.vercel.app/#founder-vicky" }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://trendverse-ten.vercel.app/#website",
+            "name": "TRENDVERSE",
+            "url": "https://trendverse-ten.vercel.app/",
+            "inLanguage": "en",
+            "publisher": { "@id": "https://trendverse-ten.vercel.app/#organization" },
+            "creator": { "@id": "https://trendverse-ten.vercel.app/#founder-vicky" }
+          }
+        ]
+      }
+    </script>
+    <!-- SEO_HEAD_END -->
 
     <!-- Typography: Playfair Display + Plus Jakarta Sans + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -36,44 +71,6 @@
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-
-    <meta name="author" content="Vicky — Founder &amp; Developer, TRENDVERSE" />
-    <!-- Base Organization, Person (Founder) & WebSite Structured Data -->
-    <script type="application/ld+json" id="trendverse-base-schema">
-      {
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "Person",
-            "@id": "#founder-vicky",
-            "name": "Vicky",
-            "description": "Founder and Developer of TRENDVERSE."
-          },
-          {
-            "@type": "Organization",
-            "@id": "#organization",
-            "name": "TRENDVERSE",
-            "description": "Discover What's Next. An independent global digital platform founded and developed by Vicky.",
-            "slogan": "Discover What's Next.",
-            "founder": {
-              "@id": "#founder-vicky"
-            }
-          },
-          {
-            "@type": "WebSite",
-            "@id": "#website",
-            "name": "TRENDVERSE",
-            "inLanguage": "en",
-            "publisher": {
-              "@id": "#organization"
-            },
-            "creator": {
-              "@id": "#founder-vicky"
-            }
-          }
-        ]
-      }
-    </script>
   </head>
   <body class="bg-white text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
     <div id="root"></div>

@@ -106,7 +106,8 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
         body: [
           'Founder & Developer: Vicky',
           'Publisher: TRENDVERSE Editorial Team',
-          'TRENDVERSE is engineered for fast performance, accessibility, and editorial clarity using Google Blogger (Blogspot), GitHub version control, and open web standards—operating strictly without mandatory paid APIs or subscriptions.',
+          'Open Source Repository: https://github.com/thedevelopers-hub/trendverse',
+          'TRENDVERSE is engineered for fast performance, accessibility, and editorial clarity using React, TypeScript, Vercel Edge/Serverless infrastructure, Google Blogger (Blogspot), and open web standards—operating strictly without mandatory paid APIs or subscriptions.',
         ],
       },
     ],
@@ -120,7 +121,7 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
       {
         heading: 'Editorial & Corrections Desk',
         body: [
-          'Accuracy is foundational to our work. If you notice an outdated figure, broken source link, or technical issue in any article, career listing, or online tool, please submit a note using the form below so the TRENDVERSE Editorial Team and Founder Vicky can review and update the record transparently.',
+          'Accuracy is foundational to our work. If you notice an outdated figure, broken source link, or technical issue in any article, career listing, or online tool, please submit a note using the form below or open an issue on our public repository (https://github.com/thedevelopers-hub/trendverse) so the TRENDVERSE Editorial Team and Founder Vicky can review and update the record transparently.',
         ],
       },
     ],
@@ -128,27 +129,27 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
   'privacy-policy': {
     id: 'privacy-policy',
     title: 'Privacy Policy',
-    subtitle: 'How TRENDVERSE handles analytics, cookies, third-party advertising disclosures, and user-submitted tool inputs.',
+    subtitle: 'How TRENDVERSE handles analytics, cookies, consent controls, third-party advertising disclosures, and browser-local utilities.',
     lastUpdated: 'November 2026',
     sections: [
       {
         heading: '1. Information We Collect & Browser-Local Processing',
         body: [
-          'TRENDVERSE’s free online utilities (Word Counter, Percentage Calculator, Age Calculator, Unit Converter, Text Case Converter, and Character Counter) execute entirely inside your web browser. Text or numbers you enter into these tools are never transmitted to or stored on external servers.',
-          'When you subscribe to our newsletter or submit a contact inquiry in this web application, inputs are validated client-side and handled strictly for the communication you explicitly requested.',
+          'TRENDVERSE’s free online utilities (Word Counter, Percentage Calculator, Age Calculator, Unit Converter, Text Case Converter, and Character Counter) and Careers Resume/ATS Tools execute entirely inside your web browser. Text, dates, or numbers entered into these tools are never transmitted to or stored on external servers.',
+          'Your reading history, saved articles, and privacy consent choices are stored locally in browser storage (localStorage) and can be cleared or updated at any time using the "Privacy & Cookie Settings" control.',
         ],
       },
       {
-        heading: '2. Cookies & Google AdSense Disclosure',
+        heading: '2. Cookies, Consent Controls & Google AdSense Disclosure',
         body: [
-          'When advertising partners such as Google AdSense are enabled on published Blogger properties, third-party vendors (including Google) use cookies to serve ads based on a user’s prior visits to this website or other websites on the internet.',
-          'Google’s use of advertising cookies enables it and its partners to serve ads to users based on their visit to TRENDVERSE and/or other sites on the Internet. Users may opt out of personalized advertising by visiting Google Ads Settings (https://adssettings.google.com) or aboutads.info.',
+          'TRENDVERSE separates essential local functionality from optional audience measurement (Google Analytics 4) and third-party advertising (Google AdSense). Optional analytics and advertising scripts load only when configured and after you grant consent via our Privacy & Cookie Preferences banner.',
+          'When Google AdSense is active, third-party vendors (including Google) use cookies to serve ads based on a user’s prior visits to this website or other websites on the internet. Users may opt out of personalized advertising at any time by visiting Google Ads Settings (https://adssettings.google.com), aboutads.info, or by updating preferences via our footer Privacy & Cookie Settings button.',
         ],
       },
       {
         heading: '3. International Data Rights (GDPR / CCPA Alignment)',
         body: [
-          'International visitors have the right to request access to, correction of, or deletion of personal contact data voluntarily submitted via email or contact forms, as well as the right to manage or block non-essential browser cookies through browser settings or consent banners where applicable.',
+          'International visitors (including readers in the EEA, UK, and California) have the right to decline non-essential analytics and advertising cookies, withdraw previously granted consent at any time, and request access to or deletion of any personal inquiry submitted directly through our editorial channels.',
         ],
       },
     ],

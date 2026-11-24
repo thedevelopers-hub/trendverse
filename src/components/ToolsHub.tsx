@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Check, Copy, RotateCcw } from 'lucide-react';
 import { AppRoute, ToolId } from '../types/editorial';
+import { routeToUrl } from '../utils/routes';
 import { AdSlot } from './AdSlot';
 
 interface ToolsHubProps {
@@ -17,6 +18,69 @@ const TOOL_TABS: Array<{ id: ToolId; label: string }> = [
   { id: 'text-case-converter', label: 'Text Case Converter' },
   { id: 'character-counter', label: 'Character Counter' },
 ];
+
+const TOOL_GUIDES: Record<
+  ToolId,
+  { heading: string; overview: string; points: string[] }
+> = {
+  'word-counter': {
+    heading: 'How Word Count & Reading Time Are Calculated',
+    overview:
+      'Editorial desks, academic writers, and SEO editors use word density and reading duration estimates to pace articles clearly.',
+    points: [
+      'Words are tokenized on whitespace boundaries, matching standard word-processor counts.',
+      'Estimated reading time uses an international adult average of 210 words per minute.',
+      'Keyword frequency ignores short 1-3 character function words so meaningful topics surface naturally.',
+    ],
+  },
+  'percentage-calculator': {
+    heading: 'Percentage Formulas Used',
+    overview:
+      'Designed for quick cross-border business literacy, inflation comparisons, discounts, and academic grading.',
+    points: [
+      'Percentage of value: (P / 100) × Total.',
+      'Percentage share: (Part / Whole) × 100.',
+      'Percentage change: ((New − Original) / |Original|) × 100, guarding cleanly against division by zero.',
+    ],
+  },
+  'age-calculator': {
+    heading: 'Chronological Calendar Age Rules',
+    overview:
+      'Computes exact age across varying month lengths and leap years for passport, scholarship, and eligibility checks.',
+    points: [
+      'Months borrow exact calendar day counts from the preceding month rather than approximating 30-day months.',
+      'Displays total elapsed days, full weeks, and exact days remaining until the next anniversary.',
+    ],
+  },
+  'unit-converter': {
+    heading: 'International SI & Binary Standards',
+    overview:
+      'Supports everyday metric-imperial conversions alongside decimal (KB/GB) and IEC binary (MiB/GiB) computing units.',
+    points: [
+      'Length and mass factors follow international SI standards (1 inch = 2.54 cm, 1 lb = 0.45359237 kg).',
+      'Digital storage separates decimal base-1000 units (GB) from binary base-1024 units (GiB).',
+    ],
+  },
+  'text-case-converter': {
+    heading: 'Editorial & Developer Case Conventions',
+    overview:
+      'Switch smoothly between publication headline formats and software identifier naming conventions.',
+    points: [
+      'Title Case and Sentence case support clean article headlines and editorial formatting.',
+      'camelCase, snake_case, and kebab-case normalize punctuation and mixed camel boundaries automatically.',
+    ],
+  },
+  'character-counter': {
+    heading: 'SEO Snippet Width & UTF-8 Byte Sizing',
+    overview:
+      'Useful for preparing search engine titles, meta descriptions, social captions, and database text constraints.',
+    points: [
+      'Search titles under 60 characters generally avoid truncation in desktop and mobile SERPs.',
+      'Meta descriptions between 120 and 160 characters provide concise context without clipping.',
+      'UTF-8 byte count helps verify multi-byte international script storage limits.',
+    ],
+  },
+};
 
 type UnitCategory = 'length' | 'mass' | 'temperature' | 'data' | 'speed';
 
@@ -315,13 +379,16 @@ export const ToolsHub: React.FC<ToolsHubProps> = ({ activeTool, onSelectTool, on
       <section className="bg-[#0b1324] text-white border-b border-white/10 py-10">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
           <nav aria-label="Breadcrumb" className="text-xs text-slate-400 mb-3">
-            <button
-              type="button"
-              onClick={() => onNavigate({ view: 'home' })}
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate({ view: 'home' });
+              }}
               className="hover:text-white cursor-pointer"
             >
               Home
-            </button>{' '}
+            </a>{' '}
             / <span className="text-slate-200">Free Online Tools</span>
           </nav>
           <h1 className="font-display text-3xl sm:text-4xl font-semibold text-white">
@@ -342,12 +409,16 @@ export const ToolsHub: React.FC<ToolsHubProps> = ({ activeTool, onSelectTool, on
           className="flex flex-wrap gap-1.5 rounded-xl bg-slate-100 p-1.5 mb-8"
         >
           {TOOL_TABS.map((tab) => (
-            <button
+            <a
               key={tab.id}
-              type="button"
+              href={routeToUrl({ view: 'tools', toolId: tab.id })}
               role="tab"
               aria-selected={activeTool === tab.id}
-              onClick={() => onSelectTool(tab.id)}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                onSelectTool(tab.id);
+              }}
               className={`rounded-lg px-3.5 py-2 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
                 activeTool === tab.id
                   ? 'bg-white text-slate-900 shadow-sm'
@@ -355,7 +426,7 @@ export const ToolsHub: React.FC<ToolsHubProps> = ({ activeTool, onSelectTool, on
               }`}
             >
               {tab.label}
-            </button>
+            </a>
           ))}
         </div>
 
@@ -773,6 +844,20 @@ export const ToolsHub: React.FC<ToolsHubProps> = ({ activeTool, onSelectTool, on
                 </div>
               </div>
             )}
+            {/* Helpful Tool Methodology & Reference Guide */}
+            <section className="mt-8 border-t border-slate-200 pt-6 space-y-2.5">
+              <h3 className="font-display text-lg font-semibold text-slate-900">
+                {TOOL_GUIDES[activeTool].heading}
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {TOOL_GUIDES[activeTool].overview}
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-600">
+                {TOOL_GUIDES[activeTool].points.map((pt) => (
+                  <li key={pt}>{pt}</li>
+                ))}
+              </ul>
+            </section>
           </div>
 
           <aside className="lg:col-span-4 space-y-6">

@@ -24,7 +24,11 @@ export const EditorialVisual: React.FC<EditorialVisualProps> = ({
         <img
           src={imageUrl}
           alt={alt}
+          width={800}
+          height={500}
           loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchPriority={priority ? 'high' : 'low'}
           referrerPolicy="no-referrer"
           onError={() => setImgFailed(true)}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"

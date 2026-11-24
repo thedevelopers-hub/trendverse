@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   DailyBriefingResponse,
   LiveNewsResponse,
@@ -10,7 +10,6 @@ import {
   Article,
   CareersTab,
   CareerToolId,
-  CategorySlug,
   EditorialDraft,
   PolicyPageId,
   ToolId,
@@ -24,6 +23,7 @@ import {
   fetchLiveNewsFeed,
   requestDailyBriefing,
 } from './services/newsroomApi';
+import { routeToUrl } from './utils/routes';
 import {
   applySeoForAICenter,
   applySeoForArticle,
@@ -37,6 +37,7 @@ import {
   applySeoForTools,
   applySeoForTrendBattle,
   applySeoForWhatsNew,
+  applyVerificationMetaTags,
 } from './utils/seo';
 import {
   clearVisitorActivity,
@@ -47,12 +48,8 @@ import {
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { SearchModal } from './components/SearchModal';
+import { ConsentBanner } from './components/ConsentBanner';
 import { HomePage } from './components/HomePage';
-import { ArticlePage } from './components/ArticlePage';
-import { CategoryPage } from './components/CategoryPage';
-import { ToolsHub } from './components/ToolsHub';
-import { BloggerThemeHub } from './components/BloggerThemeHub';
-import { PolicyPages } from './components/PolicyPages';
 import { AIIntelligenceCenter } from './components/AIIntelligenceCenter';
 import { NewsCenterSection } from './components/NewsCenterSection';
 import { LiveWorldClock } from './components/LiveWorldClock';
@@ -60,7 +57,25 @@ import { TrendsRadar } from './components/TrendsRadar';
 import { WorldIn60SecondsFeature } from './components/WorldIn60SecondsFeature';
 import { TrendBattleFeature } from './components/TrendBattleFeature';
 import { WhatsNewFeature } from './components/WhatsNewFeature';
-import { CareersPortal } from './components/careers/CareersPortal';
+
+const ArticlePage = lazy(() =>
+  import('./components/ArticlePage').then((m) => ({ default: m.ArticlePage }))
+);
+const CategoryPage = lazy(() =>
+  import('./components/CategoryPage').then((m) => ({ default: m.CategoryPage }))
+);
+const ToolsHub = lazy(() =>
+  import('./components/ToolsHub').then((m) => ({ default: m.ToolsHub }))
+);
+const BloggerThemeHub = lazy(() =>
+  import('./components/BloggerThemeHub').then((m) => ({ default: m.BloggerThemeHub }))
+);
+const PolicyPages = lazy(() =>
+  import('./components/PolicyPages').then((m) => ({ default: m.PolicyPages }))
+);
+const CareersPortal = lazy(() =>
+  import('./components/careers/CareersPortal').then((m) => ({ default: m.CareersPortal }))
+);
 
 const DRAFTS_STORAGE_KEY = 'trendverse_editorial_drafts';
 const BRIEFING_HISTORY_KEY = 'trendverse_briefing_history_v1';
@@ -194,40 +209,6 @@ function parseCurrentRoute(): AppRoute {
     return { view: 'policy', pageId: resolvePolicyPageId(param) };
   }
   return { view: 'home' };
-}
-
-function routeToUrl(route: AppRoute): string {
-  switch (route.view) {
-    case 'careers': {
-      if (route.tab === 'overview') return '/careers';
-      if (route.tab === 'tools' && route.toolId) return `/careers/tools/${route.toolId}`;
-      return `/careers/${route.tab}`;
-    }
-    case 'home':
-      return '/';
-    case 'article':
-      return `/article/${encodeURIComponent(route.slug)}`;
-    case 'category': {
-      const cat = getCategoryBySlug(route.slug);
-      return `/search/label/${encodeURIComponent(cat?.bloggerLabel || route.slug)}`;
-    }
-    case 'tools':
-      return route.toolId ? `/tools/${encodeURIComponent(route.toolId)}` : '/tools';
-    case 'ai-center':
-      return '/ai-center';
-    case 'news-center':
-      return '/news-center';
-    case 'briefing':
-      return '/briefing';
-    case 'trend-battle':
-      return '/trend-battle';
-    case 'whats-new':
-      return '/whats-new';
-    case 'blogger-hub':
-      return '/blogger-theme';
-    case 'policy':
-      return `/policy/${encodeURIComponent(route.pageId)}`;
-  }
 }
 
 export default function App() {
@@ -420,6 +401,11 @@ export default function App() {
       trendsAbortRef.current?.abort();
     };
   }, [selectedTrendGeo, loadTrends]);
+
+  // Search engine verification meta tags (when env tokens are provided)
+  useEffect(() => {
+    applyVerificationMetaTags();
+  }, []);
 
   // Dynamic SEO per route
   useEffect(() => {
@@ -648,6 +634,13 @@ export default function App() {
       />
 
       <main id="main-content" className="flex-1">
+        <Suspense
+          fallback={
+            <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-16 text-sm text-slate-500">
+              Loading section…
+            </div>
+          }
+        >
         {route.view === 'home' && (
           <HomePage
             articles={articles}
@@ -827,6 +820,7 @@ export default function App() {
             onNavigate={navigate}
           />
         )}
+        </Suspense>
       </main>
 
       <Footer onNavigate={navigate} />
@@ -839,6 +833,8 @@ export default function App() {
         trends={trendsData?.trends ?? []}
         onNavigate={navigate}
       />
+
+      <ConsentBanner onNavigate={navigate} />
     </div>
   );
 }
