@@ -45,6 +45,7 @@ import {
   saveVisitorActivity,
   VisitorActivityState,
 } from './utils/visitorActivity';
+import { trackSpaPageView } from './utils/thirdPartyScripts';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { SearchModal } from './components/SearchModal';
@@ -425,6 +426,8 @@ export default function App() {
     else if (route.view === 'trend-battle') applySeoForTrendBattle();
     else if (route.view === 'whats-new') applySeoForWhatsNew();
     else if (route.view === 'careers') applySeoForCareers(route.tab);
+
+    trackSpaPageView(route.view);
   }, [route, articles]);
 
   const handleGenerateBriefing = async () => {

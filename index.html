@@ -5,6 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b1324" />
     <meta name="google-site-verification" content="gvCz6J8bPIoAC49GLvwbsgn0GirwS-yYFDvnNcuHzT4" />
+    <!-- Google Consent Mode v2 Defaults & Tag Manager (GTM-TXW2Z9KR) -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        function gtag() {
+          w[l].push(arguments);
+        }
+        w.gtag = w.gtag || gtag;
+
+        var analyticsState = 'denied';
+        var adState = 'denied';
+        try {
+          var rawConsent = w.localStorage.getItem('trendverse_privacy_consent_v1');
+          if (rawConsent) {
+            var parsed = JSON.parse(rawConsent);
+            if (parsed && parsed.decided) {
+              analyticsState = parsed.analytics ? 'granted' : 'denied';
+              adState = parsed.advertising ? 'granted' : 'denied';
+            }
+          }
+        } catch (e) {
+          // Default to denied when storage is unavailable
+        }
+
+        w.gtag('consent', 'default', {
+          analytics_storage: analyticsState,
+          ad_storage: adState,
+          ad_user_data: adState,
+          ad_personalization: adState,
+          personalization_storage: analyticsState,
+          functionality_storage: 'granted',
+          security_storage: 'granted',
+          wait_for_update: 500,
+        });
+        w.gtag('set', 'ads_data_redaction', adState !== 'granted');
+        w.gtag('set', 'url_passthrough', false);
+
+        if (
+          w.__trendverseGtmLoaded ||
+          d.querySelector('script[src*="googletagmanager.com/gtm.js?id=' + i + '"]')
+        ) {
+          return;
+        }
+        w.__trendverseGtmLoaded = true;
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-TXW2Z9KR');
+    </script>
+    <!-- End Google Tag Manager -->
     <!-- SEO_HEAD_START -->
     <title>TRENDVERSE — Discover What's Next | International Media &amp; Tools</title>
     <meta
@@ -74,6 +128,10 @@
     />
   </head>
   <body class="bg-white text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TXW2Z9KR"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

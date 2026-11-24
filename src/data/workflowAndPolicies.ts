@@ -202,10 +202,11 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
         ],
       },
       {
-        heading: '2. Cookies, Consent Controls & Google AdSense Disclosure',
+        heading: '2. Cookies, Consent Controls, Google Tag Manager & AdSense',
         body: [
-          'TRENDVERSE separates essential local functionality from optional audience measurement (Google Analytics 4) and third-party advertising (Google AdSense). Optional analytics and advertising scripts load only when configured and after you grant consent via our Privacy & Cookie Preferences banner.',
-          'When Google AdSense is active, third-party vendors (including Google) use cookies to serve ads based on a user’s prior visits to this website or other websites on the internet. Users may opt out of personalized advertising at any time by visiting Google Ads Settings (https://adssettings.google.com), aboutads.info, or by updating preferences via our footer Privacy & Cookie Settings button.',
+          'TRENDVERSE uses Google Tag Manager (Container ID: GTM-TXW2Z9KR) configured with Google Consent Mode defaults to manage essential tag governance cleanly across routes. By default, analytics storage and advertising storage remain denied until you grant consent via our Privacy & Cookie Preferences banner.',
+          'TRENDVERSE does not transmit personally identifiable information (such as names, email addresses, search queries, or text entered into browser-local calculators or career tools) to Google Tag Manager or analytics data layers.',
+          'When Google AdSense is active and advertising consent is granted, third-party vendors (including Google) may use cookies to serve ads based on a user’s prior visits to this website or other websites on the internet. Users may opt out of personalized advertising at any time by visiting Google Ads Settings (https://adssettings.google.com), aboutads.info, or by updating preferences via our footer Privacy & Cookie Settings button.',
         ],
       },
       {
