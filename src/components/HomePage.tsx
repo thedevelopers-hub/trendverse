@@ -218,7 +218,12 @@ export const HomePage: React.FC<HomePageProps> = ({
       <LiveWorldClock useUtc={useUtc} onToggleUtc={onToggleUtc} />
 
       {/* 3. Breaking Developments Ticker */}
-      <BreakingTicker items={newsData?.items ?? []} loading={newsLoading} />
+      <BreakingTicker
+        items={newsData?.items ?? []}
+        loading={newsLoading}
+        error={newsError}
+        onRefresh={onRefreshNews}
+      />
 
       {/* 4. Hero Editorial Story + Live Wire */}
       {heroArticle && (

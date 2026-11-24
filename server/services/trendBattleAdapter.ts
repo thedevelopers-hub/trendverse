@@ -64,7 +64,7 @@ async function resolveWikipediaEntity(
     topic
   )}`;
   const res = await fetch(searchUrl, {
-    signal: AbortSignal.timeout(6000),
+    signal: AbortSignal.timeout(3800),
     headers: { 'User-Agent': WIKIMEDIA_UA },
   });
   if (!res.ok) return null;
@@ -83,7 +83,7 @@ async function resolveWikipediaEntity(
     titlesParam
   )}&format=json`;
   const propsRes = await fetch(propsUrl, {
-    signal: AbortSignal.timeout(6000),
+    signal: AbortSignal.timeout(2800),
     headers: { 'User-Agent': WIKIMEDIA_UA },
   });
 
@@ -130,7 +130,7 @@ async function fetchWikimediaDailyViews(
   )}/${formatYmdCompact(end)}`;
 
   const res = await fetch(url, {
-    signal: AbortSignal.timeout(6000),
+    signal: AbortSignal.timeout(4200),
     headers: { 'User-Agent': WIKIMEDIA_UA },
   });
   if (!res.ok) {
@@ -162,7 +162,7 @@ async function fetchRelatedSuggestQueries(
       q
     )}`;
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(3000),
       headers: { 'User-Agent': WIKIMEDIA_UA },
     });
     if (!res.ok) return [];
@@ -179,7 +179,8 @@ export async function runTrendBattleComparison(
   rawTopicA: string,
   rawTopicB: string,
   geo: TrendGeoCode = 'WORLD',
-  range: TrendBattleRange = '30d'
+  range: TrendBattleRange = '30d',
+  forceRefresh = false
 ): Promise<TrendBattleResponse> {
   const topicAInput = rawTopicA.trim();
   const topicBInput = rawTopicB.trim();
@@ -193,7 +194,7 @@ export async function runTrendBattleComparison(
 
   const cacheKey = `${topicAInput.toLowerCase()}__${topicBInput.toLowerCase()}__${validGeo}__${validRange}`;
   const cached = battleCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) {
+  if (!forceRefresh && cached && cached.expiresAt > Date.now()) {
     return cached.data;
   }
 
@@ -357,6 +358,10 @@ export async function runTrendBattleComparison(
   };
 
   if (status !== 'unavailable') {
+    if (battleCache.size >= 100) {
+      const oldestKey = battleCache.keys().next().value;
+      if (oldestKey) battleCache.delete(oldestKey);
+    }
     battleCache.set(cacheKey, { data: payload, expiresAt: Date.now() + BATTLE_CACHE_TTL_MS });
   }
 

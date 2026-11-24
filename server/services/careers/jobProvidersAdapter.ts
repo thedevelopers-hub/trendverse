@@ -133,7 +133,7 @@ async function fetchWithCache(
 // 1. Himalayas Public Jobs API
 async function fetchHimalayas(verifiedAt: string): Promise<CareerOpportunity[]> {
   const res = await fetch('https://himalayas.app/jobs/api?limit=45', {
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(4800),
     headers: { 'User-Agent': USER_AGENT },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -245,7 +245,7 @@ async function fetchHimalayas(verifiedAt: string): Promise<CareerOpportunity[]> 
 // 2. Remotive Public API (Strict max 4 fetches/day -> 360m cache, direct URL, attribution)
 async function fetchRemotive(verifiedAt: string): Promise<CareerOpportunity[]> {
   const res = await fetch('https://remotive.com/api/remote-jobs?limit=40', {
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(4800),
     headers: { 'User-Agent': USER_AGENT },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -320,7 +320,7 @@ async function fetchRemotive(verifiedAt: string): Promise<CareerOpportunity[]> {
 // 3. Arbeitnow Public Job Board API
 async function fetchArbeitnow(verifiedAt: string): Promise<CareerOpportunity[]> {
   const res = await fetch('https://www.arbeitnow.com/api/job-board-api', {
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(4800),
     headers: { 'User-Agent': USER_AGENT },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -393,7 +393,7 @@ async function fetchArbeitnow(verifiedAt: string): Promise<CareerOpportunity[]> 
 // 4. Jobicy Public Remote Jobs API
 async function fetchJobicy(verifiedAt: string): Promise<CareerOpportunity[]> {
   const res = await fetch('https://jobicy.com/api/v2/remote-jobs?count=35', {
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(4800),
     headers: { 'User-Agent': USER_AGENT },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -472,7 +472,7 @@ async function fetchGreenhouseBoards(verifiedAt: string): Promise<CareerOpportun
   const perBoard = await Promise.allSettled(
     GREENHOUSE_BOARDS.map(async (board) => {
       const res = await fetch(`https://boards-api.greenhouse.io/v1/boards/${board.slug}/jobs`, {
-        signal: AbortSignal.timeout(7000),
+        signal: AbortSignal.timeout(4500),
         headers: { 'User-Agent': USER_AGENT },
       });
       if (!res.ok) throw new Error(`${board.company}: HTTP ${res.status}`);
@@ -563,7 +563,7 @@ async function fetchLeverBoards(verifiedAt: string): Promise<CareerOpportunity[]
   const perBoard = await Promise.allSettled(
     LEVER_BOARDS.map(async (board) => {
       const res = await fetch(`https://api.lever.co/v0/postings/${board.slug}?mode=json`, {
-        signal: AbortSignal.timeout(7000),
+        signal: AbortSignal.timeout(4500),
         headers: { 'User-Agent': USER_AGENT },
       });
       if (!res.ok) throw new Error(`${board.company}: HTTP ${res.status}`);

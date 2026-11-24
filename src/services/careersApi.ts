@@ -8,6 +8,7 @@ import {
   GovernmentPortalDirectoryItem,
   OfficialScholarshipDirectoryItem,
 } from '../../server/types';
+import { fetchJsonApi } from './apiClient';
 
 export interface CareersQueryParams {
   q?: string;
@@ -21,6 +22,7 @@ export interface CareersQueryParams {
   salaryOnly?: boolean;
   sort?: 'newest' | 'relevant' | 'salary-desc' | 'salary-asc';
   refresh?: boolean;
+  signal?: AbortSignal;
 }
 
 export interface ScholarshipsApiResponse {
@@ -57,59 +59,95 @@ export async function fetchCareerOpportunities(
   if (params.salaryMin && params.salaryMin > 0) qs.set('salaryMin', String(params.salaryMin));
   if (params.salaryOnly) qs.set('salaryOnly', '1');
   if (params.sort) qs.set('sort', params.sort);
-  if (params.refresh) qs.set('refresh', '1');
+  if (params.refresh) {
+    qs.set('refresh', '1');
+    qs.set('_t', String(Date.now()));
+  }
 
-  const res = await fetch(`/api/careers/opportunities?${qs.toString()}`);
-  const data = (await res.json()) as CareersOpportunitiesResponse;
-  if (!res.ok && data.status !== 'partial') {
-    throw new Error('Failed to load career opportunities.');
+  const query = qs.toString();
+  const { ok, data } = await fetchJsonApi<CareersOpportunitiesResponse>(
+    query ? `/api/careers/opportunities?${query}` : '/api/careers/opportunities',
+    {
+      allowErrorPayload: true,
+      signal: params.signal,
+      cache: params.refresh ? 'no-store' : 'default',
+    }
+  );
+  if (!ok && data.status !== 'partial') {
+    const maybeErr = (data as CareersOpportunitiesResponse & { errorMessage?: string }).errorMessage;
+    throw new Error(maybeErr || 'Failed to load career opportunities.');
   }
   return data;
 }
 
 export async function fetchScholarships(
   country = 'All',
-  refresh = false
+  refresh = false,
+  signal?: AbortSignal
 ): Promise<ScholarshipsApiResponse> {
   const qs = new URLSearchParams();
   if (country && country !== 'All') qs.set('country', country);
-  if (refresh) qs.set('refresh', '1');
-  const res = await fetch(`/api/careers/scholarships?${qs.toString()}`);
-  if (!res.ok) throw new Error('Unable to load scholarship feeds.');
-  return (await res.json()) as ScholarshipsApiResponse;
+  if (refresh) {
+    qs.set('refresh', '1');
+    qs.set('_t', String(Date.now()));
+  }
+  const query = qs.toString();
+  const { data } = await fetchJsonApi<ScholarshipsApiResponse>(
+    query ? `/api/careers/scholarships?${query}` : '/api/careers/scholarships',
+    {
+      signal,
+      cache: refresh ? 'no-store' : 'default',
+    }
+  );
+  return data;
 }
 
 export async function fetchGovernmentJobs(
   country = 'All',
-  refresh = false
+  refresh = false,
+  signal?: AbortSignal
 ): Promise<GovernmentApiResponse> {
   const qs = new URLSearchParams();
   if (country && country !== 'All') qs.set('country', country);
-  if (refresh) qs.set('refresh', '1');
-  const res = await fetch(`/api/careers/government?${qs.toString()}`);
-  if (!res.ok) throw new Error('Unable to load government recruitment data.');
-  return (await res.json()) as GovernmentApiResponse;
+  if (refresh) {
+    qs.set('refresh', '1');
+    qs.set('_t', String(Date.now()));
+  }
+  const query = qs.toString();
+  const { data } = await fetchJsonApi<GovernmentApiResponse>(
+    query ? `/api/careers/government?${query}` : '/api/careers/government',
+    {
+      signal,
+      cache: refresh ? 'no-store' : 'default',
+    }
+  );
+  return data;
 }
 
-export async function fetchStudentCertifications(): Promise<{
+export async function fetchStudentCertifications(
+  signal?: AbortSignal
+): Promise<{
   programs: CareerCertificationProgram[];
   lastUpdated: string;
 }> {
-  const res = await fetch('/api/careers/student-resources');
-  if (!res.ok) throw new Error('Unable to load student certification resources.');
-  return (await res.json()) as {
+  const { data } = await fetchJsonApi<{
     programs: CareerCertificationProgram[];
     lastUpdated: string;
-  };
+  }>('/api/careers/student-resources', { signal });
+  return data;
 }
 
 export async function requestCareerAiAssist(
-  payload: CareerAiAssistRequest
+  payload: CareerAiAssistRequest,
+  signal?: AbortSignal
 ): Promise<CareerAiAssistResponse> {
-  const res = await fetch('/api/careers/ai-assist', {
+  const { data } = await fetchJsonApi<CareerAiAssistResponse>('/api/careers/ai-assist', {
     method: 'POST',
+    allowErrorPayload: true,
+    signal,
+    cache: 'no-store',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return (await res.json()) as CareerAiAssistResponse;
+  return data;
 }

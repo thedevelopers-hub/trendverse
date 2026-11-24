@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -182,31 +182,46 @@ export const CareersPortal: React.FC<CareersPortalProps> = ({
     return () => window.clearInterval(id);
   }, []);
 
+  const careersAbortRef = useRef<AbortController | null>(null);
+  const careersReqIdRef = useRef(0);
+
   const loadAllCareersData = useCallback(async (forceRefresh = false) => {
+    careersAbortRef.current?.abort();
+    const controller = new AbortController();
+    careersAbortRef.current = controller;
+    const reqId = ++careersReqIdRef.current;
+
     setJobsLoading(true);
     setJobsError(null);
     try {
       const [jobsRes, schRes, govRes, certRes] = await Promise.all([
-        fetchCareerOpportunities({ refresh: forceRefresh }),
-        fetchScholarships('All', forceRefresh),
-        fetchGovernmentJobs('All', forceRefresh),
-        fetchStudentCertifications(),
+        fetchCareerOpportunities({ refresh: forceRefresh, signal: controller.signal }),
+        fetchScholarships('All', forceRefresh, controller.signal),
+        fetchGovernmentJobs('All', forceRefresh, controller.signal),
+        fetchStudentCertifications(controller.signal),
       ]);
+      if (controller.signal.aborted || reqId !== careersReqIdRef.current) return;
       setJobsData(jobsRes);
       setScholarshipsData(schRes);
       setGovData(govRes);
       setStudentCerts(certRes.programs);
     } catch (err) {
+      if (controller.signal.aborted || reqId !== careersReqIdRef.current) return;
       setJobsError(
         err instanceof Error ? err.message : 'Unable to fetch free career provider feeds.'
       );
     } finally {
-      setJobsLoading(false);
+      if (reqId === careersReqIdRef.current) {
+        setJobsLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     void loadAllCareersData(false);
+    return () => {
+      careersAbortRef.current?.abort();
+    };
   }, [loadAllCareersData]);
 
   const updateProfile = useCallback((updater: (prev: CareerProfilePreferences) => CareerProfilePreferences) => {

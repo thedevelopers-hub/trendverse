@@ -132,7 +132,7 @@ export async function getLiveScholarshipFeeds(forceRefresh = false): Promise<{
       forceRefresh,
       async (verifiedAt) => {
         const res = await fetch('https://www.nsf.gov/rss/rss_www_funding.xml', {
-          signal: AbortSignal.timeout(7000),
+          signal: AbortSignal.timeout(4800),
           headers: { 'User-Agent': USER_AGENT },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -193,7 +193,7 @@ export async function getLiveScholarshipFeeds(forceRefresh = false): Promise<{
       forceRefresh,
       async (verifiedAt) => {
         const res = await fetch('https://www.ukri.org/opportunity/feed/', {
-          signal: AbortSignal.timeout(7000),
+          signal: AbortSignal.timeout(4800),
           headers: { 'User-Agent': USER_AGENT },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -254,7 +254,7 @@ export async function getLiveScholarshipFeeds(forceRefresh = false): Promise<{
       forceRefresh,
       async (verifiedAt) => {
         const res = await fetch('https://www.scholars4dev.com/feed/', {
-          signal: AbortSignal.timeout(7000),
+          signal: AbortSignal.timeout(4800),
           headers: { 'User-Agent': USER_AGENT },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -337,7 +337,7 @@ export async function getGovernmentRecruitmentData(forceRefresh = false): Promis
         const url =
           'https://www.federalregister.gov/api/v1/documents.json?per_page=10&conditions%5Bterm%5D=fellowship+OR+internship+OR+scholarship';
         const res = await fetch(url, {
-          signal: AbortSignal.timeout(7000),
+          signal: AbortSignal.timeout(4800),
           headers: { 'User-Agent': USER_AGENT },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -414,7 +414,7 @@ export async function getGovernmentRecruitmentData(forceRefresh = false): Promis
         const url =
           'https://www.gov.uk/search/news-and-communications.atom?keywords=apprenticeship+OR+recruitment+OR+scholarship';
         const res = await fetch(url, {
-          signal: AbortSignal.timeout(7000),
+          signal: AbortSignal.timeout(4800),
           headers: { 'User-Agent': USER_AGENT },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

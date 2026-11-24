@@ -6,6 +6,7 @@ import {
   TrendGeoCode,
   TrendsResponse,
 } from '../../server/types';
+import { fetchJsonApi } from './apiClient';
 
 export interface IntegrationsHealth {
   geminiServerConfigured: boolean;
@@ -13,6 +14,7 @@ export interface IntegrationsHealth {
   trendRegionsCount: number;
   nasaFeedActive: boolean;
   bloggerFeedMode: string;
+  runtime?: string;
 }
 
 export async function fetchLiveNewsFeed(options?: {
@@ -20,38 +22,54 @@ export async function fetchLiveNewsFeed(options?: {
   category?: string;
   country?: string;
   query?: string;
+  signal?: AbortSignal;
 }): Promise<LiveNewsResponse> {
   const params = new URLSearchParams();
-  if (options?.refresh) params.set('refresh', '1');
+  if (options?.refresh) {
+    params.set('refresh', '1');
+    params.set('_t', String(Date.now()));
+  }
   if (options?.category) params.set('category', options.category);
   if (options?.country) params.set('country', options.country);
   if (options?.query) params.set('q', options.query);
 
-  const res = await fetch(`/api/news?${params.toString()}`);
-  if (!res.ok) {
-    throw new Error(`News service error (${res.status})`);
-  }
-  return (await res.json()) as LiveNewsResponse;
+  const qs = params.toString();
+  const { data } = await fetchJsonApi<LiveNewsResponse>(
+    qs ? `/api/news?${qs}` : '/api/news',
+    {
+      signal: options?.signal,
+      cache: options?.refresh ? 'no-store' : 'default',
+    }
+  );
+  return data;
 }
 
 export async function fetchGoogleTrendsFeed(
   geo: TrendGeoCode = 'WORLD',
-  refresh = false
+  refresh = false,
+  signal?: AbortSignal
 ): Promise<TrendsResponse> {
   const params = new URLSearchParams({ geo });
-  if (refresh) params.set('refresh', '1');
-  const res = await fetch(`/api/trends?${params.toString()}`);
-  if (!res.ok) {
-    throw new Error(`Trends service error (${res.status})`);
+  if (refresh) {
+    params.set('refresh', '1');
+    params.set('_t', String(Date.now()));
   }
-  return (await res.json()) as TrendsResponse;
+  const { data } = await fetchJsonApi<TrendsResponse>(
+    `/api/trends?${params.toString()}`,
+    {
+      signal,
+      cache: refresh ? 'no-store' : 'default',
+    }
+  );
+  return data;
 }
 
 export async function fetchTrendBattle(
   topicA: string,
   topicB: string,
   geo: TrendGeoCode = 'WORLD',
-  range: TrendBattleRange = '30d'
+  range: TrendBattleRange = '30d',
+  options?: { refresh?: boolean; signal?: AbortSignal }
 ): Promise<TrendBattleResponse> {
   const params = new URLSearchParams({
     topicA: topicA.trim(),
@@ -59,8 +77,18 @@ export async function fetchTrendBattle(
     geo,
     range,
   });
-  const res = await fetch(`/api/trend-battle?${params.toString()}`);
-  const data = (await res.json()) as TrendBattleResponse;
+  if (options?.refresh) {
+    params.set('refresh', '1');
+    params.set('_t', String(Date.now()));
+  }
+  const { data } = await fetchJsonApi<TrendBattleResponse>(
+    `/api/trend-battle?${params.toString()}`,
+    {
+      allowErrorPayload: true,
+      signal: options?.signal,
+      cache: options?.refresh ? 'no-store' : 'default',
+    }
+  );
   return data;
 }
 
@@ -69,9 +97,13 @@ export async function requestDailyBriefing(options?: {
   country?: string;
   category?: string;
   count?: number;
+  signal?: AbortSignal;
 }): Promise<DailyBriefingResponse> {
-  const res = await fetch('/api/briefing', {
+  const { data } = await fetchJsonApi<DailyBriefingResponse>('/api/briefing', {
     method: 'POST',
+    allowErrorPayload: true,
+    signal: options?.signal,
+    cache: 'no-store',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       refreshNews: Boolean(options?.refreshNews),
@@ -80,14 +112,15 @@ export async function requestDailyBriefing(options?: {
       count: options?.count ?? 7,
     }),
   });
-  const data = (await res.json()) as DailyBriefingResponse;
   return data;
 }
 
-export async function fetchIntegrationsHealth(): Promise<IntegrationsHealth> {
-  const res = await fetch('/api/integrations/status');
-  if (!res.ok) {
-    throw new Error('Could not read integration status');
-  }
-  return (await res.json()) as IntegrationsHealth;
+export async function fetchIntegrationsHealth(
+  signal?: AbortSignal
+): Promise<IntegrationsHealth> {
+  const { data } = await fetchJsonApi<IntegrationsHealth>('/api/integrations/status', {
+    signal,
+    cache: 'no-store',
+  });
+  return data;
 }

@@ -106,6 +106,7 @@ const xmlParser = new XMLParser({
 const CACHE_TTL_MS = 3 * 60 * 1000;
 let cachedResponse: LiveNewsResponse | null = null;
 let lastFetchMs = 0;
+let inFlightNewsPromise: Promise<LiveNewsResponse> | null = null;
 const sourceHealthMap = new Map<string, FeedSourceHealth>();
 const perSourceCachedItems = new Map<string, LiveNewsItem[]>();
 
@@ -216,7 +217,7 @@ async function fetchSingleSource(source: FeedSourceConfig): Promise<LiveNewsItem
 
   try {
     const response = await fetch(source.url, {
-      signal: AbortSignal.timeout(7000),
+      signal: AbortSignal.timeout(4800),
       headers: {
         'User-Agent': 'TRENDVERSE-Newsroom/2.0 (RSS Reader)',
         Accept: 'application/rss+xml, application/xml, text/xml, */*',
@@ -319,53 +320,68 @@ async function fetchSingleSource(source: FeedSourceConfig): Promise<LiveNewsItem
 
 export async function getLiveNews(forceRefresh = false): Promise<LiveNewsResponse> {
   const now = Date.now();
-  if (!forceRefresh && cachedResponse && now - lastFetchMs < CACHE_TTL_MS) {
+  if (!forceRefresh && cachedResponse && cachedResponse.items.length > 0 && now - lastFetchMs < CACHE_TTL_MS) {
     return cachedResponse;
   }
 
-  const results = await Promise.all(PUBLIC_NEWS_SOURCES.map(fetchSingleSource));
-  const combined = results.flat().sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
-  const { unique, duplicatesRemoved } = deduplicateItems(combined);
-
-  const sources = PUBLIC_NEWS_SOURCES.map(
-    (s) =>
-      sourceHealthMap.get(s.id) || {
-        id: s.id,
-        name: s.name,
-        category: s.category,
-        url: s.url,
-        status: 'error' as const,
-        lastCheckedAt: new Date().toISOString(),
-        lastSuccessAt: null,
-        itemCount: 0,
-      }
-  );
-
-  const okCount = sources.filter((s) => s.status === 'ok').length;
-  const status: LiveNewsResponse['status'] =
-    okCount === sources.length
-      ? 'live'
-      : okCount > 0
-      ? 'partial'
-      : unique.length > 0
-      ? 'cached'
-      : 'unavailable';
-
-  const lastSuccessfulRefresh =
-    okCount > 0 ? new Date().toISOString() : cachedResponse?.lastSuccessfulRefresh ?? null;
-
-  const payload: LiveNewsResponse = {
-    items: unique,
-    sources,
-    lastSuccessfulRefresh,
-    duplicatesRemoved,
-    status,
-  };
-
-  if (unique.length > 0 || !cachedResponse) {
-    cachedResponse = payload;
-    lastFetchMs = now;
+  if (inFlightNewsPromise && !forceRefresh) {
+    return inFlightNewsPromise;
   }
 
-  return payload;
+  const runFetch = async (): Promise<LiveNewsResponse> => {
+    const results = await Promise.all(PUBLIC_NEWS_SOURCES.map(fetchSingleSource));
+    const combined = results.flat().sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
+    const { unique, duplicatesRemoved } = deduplicateItems(combined);
+
+    const sources = PUBLIC_NEWS_SOURCES.map(
+      (s) =>
+        sourceHealthMap.get(s.id) || {
+          id: s.id,
+          name: s.name,
+          category: s.category,
+          url: s.url,
+          status: 'error' as const,
+          lastCheckedAt: new Date().toISOString(),
+          lastSuccessAt: null,
+          itemCount: 0,
+        }
+    );
+
+    const okCount = sources.filter((s) => s.status === 'ok').length;
+    const status: LiveNewsResponse['status'] =
+      okCount === sources.length
+        ? 'live'
+        : okCount > 0
+        ? 'partial'
+        : unique.length > 0
+        ? 'cached'
+        : 'unavailable';
+
+    const lastSuccessfulRefresh =
+      okCount > 0 ? new Date().toISOString() : cachedResponse?.lastSuccessfulRefresh ?? null;
+
+    const payload: LiveNewsResponse = {
+      items: unique,
+      sources,
+      lastSuccessfulRefresh,
+      duplicatesRemoved,
+      status,
+    };
+
+    // Never poison warm serverless memory cache with an empty failed response
+    if (unique.length > 0) {
+      cachedResponse = payload;
+      lastFetchMs = Date.now();
+    }
+
+    return payload;
+  };
+
+  const promise = runFetch().finally(() => {
+    if (inFlightNewsPromise === promise) {
+      inFlightNewsPromise = null;
+    }
+  });
+  inFlightNewsPromise = promise;
+  return promise;
 }

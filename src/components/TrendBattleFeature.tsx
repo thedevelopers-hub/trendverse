@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight, Check, Scale, Share2 } from 'lucide-react';
 import {
   TrendBattleRange,
@@ -51,41 +51,60 @@ export const TrendBattleFeature: React.FC<TrendBattleFeatureProps> = ({
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [copiedShare, setCopiedShare] = useState(false);
 
+  const abortRef = useRef<AbortController | null>(null);
+  const reqIdRef = useRef(0);
+
   const runComparison = async (
     a: string,
     b: string,
     g: TrendGeoCode,
-    r: TrendBattleRange
+    r: TrendBattleRange,
+    forceRefresh = false
   ) => {
     if (!a.trim() || !b.trim()) {
       setError('Enter both Topic A and Topic B to compare.');
       return;
     }
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const reqId = ++reqIdRef.current;
+
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchTrendBattle(a, b, g, r);
+      const data = await fetchTrendBattle(a, b, g, r, {
+        refresh: forceRefresh,
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted || reqId !== reqIdRef.current) return;
       setResult(data);
     } catch (err) {
+      if (controller.signal.aborted || reqId !== reqIdRef.current) return;
       setError(err instanceof Error ? err.message : 'Unable to fetch comparison data.');
     } finally {
-      setLoading(false);
+      if (reqId === reqIdRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     void runComparison(topicA, topicB, geo, range);
+    return () => {
+      abortRef.current?.abort();
+    };
     // Run initial comparison once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    void runComparison(topicA, topicB, geo, range);
+    void runComparison(topicA, topicB, geo, range, true);
   };
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/#trend-battle`;
+    const shareUrl = `${window.location.origin}/trend-battle`;
     const summaryText = result
       ? `TRENDVERSE Trend Battle (${result.geoName}, ${result.range}): ${result.topicA.inputTopic} (Avg ${result.topicA.averageScore}/100) vs ${result.topicB.inputTopic} (Avg ${result.topicB.averageScore}/100) — ${shareUrl}`
       : shareUrl;

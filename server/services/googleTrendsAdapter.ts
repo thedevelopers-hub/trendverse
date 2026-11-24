@@ -33,6 +33,7 @@ const xmlParser = new XMLParser({
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const regionCache = new Map<TrendGeoCode, { data: TrendsResponse; fetchedAt: number }>();
+const inFlightTrends = new Map<TrendGeoCode, Promise<TrendsResponse>>();
 
 function parseTrafficNumber(raw: string): number {
   const digits = raw.replace(/[^0-9]/g, '');
@@ -74,7 +75,7 @@ async function fetchRegionalRss(geo: Exclude<TrendGeoCode, 'WORLD'>): Promise<Tr
   const rssUrl = `https://trends.google.com/trending/rss?geo=${geo}`;
 
   const response = await fetch(rssUrl, {
-    signal: AbortSignal.timeout(7000),
+    signal: AbortSignal.timeout(4800),
     headers: {
       'User-Agent': 'TRENDVERSE-TrendRadar/2.0',
       Accept: 'application/rss+xml, application/xml, text/xml',
@@ -149,77 +150,94 @@ export async function getGoogleTrends(
   const now = Date.now();
   const cached = regionCache.get(validGeo);
 
-  if (!forceRefresh && cached && now - cached.fetchedAt < CACHE_TTL_MS) {
+  if (!forceRefresh && cached && cached.data.trends.length > 0 && now - cached.fetchedAt < CACHE_TTL_MS) {
     return cached.data;
   }
 
-  try {
-    let trends: TrendItem[] = [];
-    if (validGeo === 'WORLD') {
-      const sampleRegions: Exclude<TrendGeoCode, 'WORLD'>[] = ['US', 'IN', 'GB', 'DE', 'JP', 'AU'];
-      const settled = await Promise.allSettled(sampleRegions.map((r) => fetchRegionalRss(r)));
-      const all = settled
-        .filter((r): r is PromiseFulfilledResult<TrendItem[]> => r.status === 'fulfilled')
-        .flatMap((r) => r.value);
+  const existingInFlight = inFlightTrends.get(validGeo);
+  if (existingInFlight && !forceRefresh) {
+    return existingInFlight;
+  }
 
-      if (all.length === 0) {
-        throw new Error('Unable to reach regional Google Trends RSS feeds.');
+  const runFetch = async (): Promise<TrendsResponse> => {
+    try {
+      let trends: TrendItem[] = [];
+      if (validGeo === 'WORLD') {
+        const sampleRegions: Exclude<TrendGeoCode, 'WORLD'>[] = ['US', 'IN', 'GB', 'DE', 'JP', 'AU'];
+        const settled = await Promise.allSettled(sampleRegions.map((r) => fetchRegionalRss(r)));
+        const all = settled
+          .filter((r): r is PromiseFulfilledResult<TrendItem[]> => r.status === 'fulfilled')
+          .flatMap((r) => r.value);
+
+        if (all.length === 0) {
+          throw new Error('Unable to reach regional Google Trends RSS feeds.');
+        }
+
+        const seenQueries = new Set<string>();
+        trends = all
+          .sort((a, b) => b.trafficNumeric - a.trafficNumeric)
+          .filter((item) => {
+            const key = item.query.toLowerCase();
+            if (seenQueries.has(key)) return false;
+            seenQueries.add(key);
+            return true;
+          })
+          .slice(0, 12);
+      } else {
+        trends = await fetchRegionalRss(validGeo);
       }
 
-      const seenQueries = new Set<string>();
-      trends = all
-        .sort((a, b) => b.trafficNumeric - a.trafficNumeric)
-        .filter((item) => {
-          const key = item.query.toLowerCase();
-          if (seenQueries.has(key)) return false;
-          seenQueries.add(key);
-          return true;
-        })
-        .slice(0, 12);
-    } else {
-      trends = await fetchRegionalRss(validGeo);
-    }
+      const payload: TrendsResponse = {
+        geo: validGeo,
+        geoName,
+        sourceName: 'Google Trends Official RSS',
+        sourceUrl:
+          validGeo === 'WORLD'
+            ? 'https://trends.google.com/trending'
+            : `https://trends.google.com/trending/rss?geo=${validGeo}`,
+        lastUpdated: new Date().toISOString(),
+        status: 'live',
+        note:
+          validGeo === 'WORLD'
+            ? 'Aggregated from live regional Google Trends RSS feeds (US, IN, GB, DE, JP, AU). Traffic tiers represent Google Trends approximate search interest buckets, not exact total query counts.'
+            : 'Traffic tiers reflect Google Trends approximate search interest buckets (ht:approx_traffic), not absolute search volume.',
+        trends,
+      };
 
-    const payload: TrendsResponse = {
-      geo: validGeo,
-      geoName,
-      sourceName: 'Google Trends Official RSS',
-      sourceUrl:
-        validGeo === 'WORLD'
-          ? 'https://trends.google.com/trending'
-          : `https://trends.google.com/trending/rss?geo=${validGeo}`,
-      lastUpdated: new Date().toISOString(),
-      status: 'live',
-      note:
-        validGeo === 'WORLD'
-          ? 'Aggregated from live regional Google Trends RSS feeds (US, IN, GB, DE, JP, AU). Traffic tiers represent Google Trends approximate search interest buckets, not exact total query counts.'
-          : 'Traffic tiers reflect Google Trends approximate search interest buckets (ht:approx_traffic), not absolute search volume.',
-      trends,
-    };
+      if (trends.length > 0) {
+        regionCache.set(validGeo, { data: payload, fetchedAt: Date.now() });
+      }
+      return payload;
+    } catch (err) {
+      if (cached && cached.data.trends.length > 0) {
+        return {
+          ...cached.data,
+          status: 'cached',
+          errorMessage: err instanceof Error ? err.message : 'Live Google Trends fetch failed; showing cached data.',
+        };
+      }
 
-    regionCache.set(validGeo, { data: payload, fetchedAt: now });
-    return payload;
-  } catch (err) {
-    if (cached) {
       return {
-        ...cached.data,
-        status: 'cached',
-        errorMessage: err instanceof Error ? err.message : 'Live Google Trends fetch failed; showing cached data.',
+        geo: validGeo,
+        geoName,
+        sourceName: 'Google Trends Official RSS',
+        sourceUrl: 'https://trends.google.com/trending',
+        lastUpdated: null,
+        status: 'unavailable',
+        note: 'Official Google Trends feed could not be reached right now.',
+        errorMessage: err instanceof Error ? err.message : 'Google Trends feed temporarily unavailable.',
+        trends: [],
       };
     }
+  };
 
-    return {
-      geo: validGeo,
-      geoName,
-      sourceName: 'Google Trends Official RSS',
-      sourceUrl: 'https://trends.google.com/trending',
-      lastUpdated: null,
-      status: 'unavailable',
-      note: 'Official Google Trends feed could not be reached right now.',
-      errorMessage: err instanceof Error ? err.message : 'Google Trends feed temporarily unavailable.',
-      trends: [],
-    };
-  }
+  const promise = runFetch().finally(() => {
+    if (inFlightTrends.get(validGeo) === promise) {
+      inFlightTrends.delete(validGeo);
+    }
+  });
+  inFlightTrends.set(validGeo, promise);
+  return promise;
 }
 
 export { REGIONAL_CODES };

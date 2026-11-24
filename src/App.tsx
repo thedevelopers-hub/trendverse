@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   DailyBriefingResponse,
   LiveNewsResponse,
@@ -305,37 +305,96 @@ export default function App() {
     };
   }, []);
 
+  const newsAbortRef = useRef<AbortController | null>(null);
+  const newsReqIdRef = useRef(0);
+  const newsInFlightRef = useRef(false);
+  const lastNewsSyncMsRef = useRef(0);
+
+  const trendsAbortRef = useRef<AbortController | null>(null);
+  const trendsReqIdRef = useRef(0);
+
   const loadNews = useCallback(async (forceRefresh = false) => {
+    if (!forceRefresh && newsInFlightRef.current) {
+      return;
+    }
+
+    newsAbortRef.current?.abort();
+    const controller = new AbortController();
+    newsAbortRef.current = controller;
+    newsInFlightRef.current = true;
+    const reqId = ++newsReqIdRef.current;
+
     setNewsLoading(true);
     setNewsError(null);
     try {
-      const data = await fetchLiveNewsFeed({ refresh: forceRefresh });
+      const data = await fetchLiveNewsFeed({
+        refresh: forceRefresh,
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted || reqId !== newsReqIdRef.current) return;
       setNewsData(data);
+      if (data.status === 'unavailable' && data.items.length === 0) {
+        setNewsError('Upstream RSS feeds are temporarily unavailable. Select Refresh to retry.');
+      } else {
+        lastNewsSyncMsRef.current = Date.now();
+      }
     } catch (err) {
+      if (controller.signal.aborted || reqId !== newsReqIdRef.current) return;
       setNewsError(err instanceof Error ? err.message : 'Unable to refresh live news feeds.');
     } finally {
-      setNewsLoading(false);
+      if (reqId === newsReqIdRef.current) {
+        newsInFlightRef.current = false;
+        setNewsLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     void loadNews(false);
+    return () => {
+      newsAbortRef.current?.abort();
+    };
   }, [loadNews]);
 
   useEffect(() => {
     if (autoRefreshMinutes <= 0) return;
+    const intervalMs = autoRefreshMinutes * 60 * 1000;
     const id = window.setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
       void loadNews(true);
-    }, autoRefreshMinutes * 60 * 1000);
-    return () => window.clearInterval(id);
+    }, intervalMs);
+
+    const onVisibilityChange = () => {
+      if (
+        document.visibilityState === 'visible' &&
+        Date.now() - lastNewsSyncMsRef.current >= intervalMs
+      ) {
+        void loadNews(true);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [autoRefreshMinutes, loadNews]);
 
   const loadTrends = useCallback(async (geo: TrendGeoCode, forceRefresh = false) => {
+    trendsAbortRef.current?.abort();
+    const controller = new AbortController();
+    trendsAbortRef.current = controller;
+    const reqId = ++trendsReqIdRef.current;
+
     setTrendsLoading(true);
     try {
-      const res = await fetchGoogleTrendsFeed(geo, forceRefresh);
+      const res = await fetchGoogleTrendsFeed(geo, forceRefresh, controller.signal);
+      if (controller.signal.aborted || reqId !== trendsReqIdRef.current) return;
       setTrendsData(res);
-    } catch {
+    } catch (err) {
+      if (controller.signal.aborted || reqId !== trendsReqIdRef.current) return;
       setTrendsData({
         geo,
         geoName: geo,
@@ -344,16 +403,22 @@ export default function App() {
         lastUpdated: null,
         status: 'unavailable',
         note: 'Google Trends feed could not be reached.',
-        errorMessage: 'Network error fetching Google Trends RSS.',
+        errorMessage:
+          err instanceof Error ? err.message : 'Network error fetching Google Trends RSS.',
         trends: [],
       });
     } finally {
-      setTrendsLoading(false);
+      if (reqId === trendsReqIdRef.current) {
+        setTrendsLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     void loadTrends(selectedTrendGeo, false);
+    return () => {
+      trendsAbortRef.current?.abort();
+    };
   }, [selectedTrendGeo, loadTrends]);
 
   // Dynamic SEO per route
