@@ -129,6 +129,9 @@ function resolveLabelRoute(rawLabel: string): AppRoute {
 function resolvePolicyPageId(segment?: string): PolicyPageId {
   const cleaned = (segment || '').replace(/\.html$/i, '').toLowerCase();
   if (cleaned === 'about-us') return 'about';
+  if (cleaned === 'contact-us') return 'contact';
+  if (cleaned === 'privacy') return 'privacy-policy';
+  if (cleaned === 'terms') return 'terms-and-conditions';
   if (cleaned in POLICY_PAGES) return cleaned as PolicyPageId;
   return 'about';
 }

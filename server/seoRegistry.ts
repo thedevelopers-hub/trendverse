@@ -236,6 +236,12 @@ function buildCoreNodes(origin: string, pageUrl: string, title: string, pageType
       description:
         'Discover What\'s Next. An independent global digital media, live trend intelligence, careers, and free utilities platform founded and developed by Vicky.',
       founder: { '@id': `${origin}/#founder-vicky` },
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'editorial',
+        email: FOUNDER_BRAND_IDENTITY.contactEmail,
+        availableLanguage: 'English',
+      },
     },
     {
       '@type': 'WebSite',
@@ -562,15 +568,26 @@ export function resolveRouteSeo(
     const pageId: PolicyPageId =
       rawId === 'about-us'
         ? 'about'
+        : rawId === 'contact-us'
+        ? 'contact'
+        : rawId === 'privacy'
+        ? 'privacy-policy'
+        : rawId === 'terms'
+        ? 'terms-and-conditions'
         : rawId in POLICY_PAGES
         ? (rawId as PolicyPageId)
         : 'about';
     const page = POLICY_PAGES[pageId];
     const canonicalUrl = `${origin}/policy/${pageId}`;
-    const title = `${page.title} — TRENDVERSE`;
-    const description = page.subtitle.slice(0, 160);
+    const title = page.seoTitle || `${page.title} — TRENDVERSE`;
+    const description = (page.seoDescription || page.subtitle).slice(0, 160);
     const schemaPageType =
       pageId === 'about' ? 'AboutPage' : pageId === 'contact' ? 'ContactPage' : 'WebPage';
+
+    const contactNoscript =
+      pageId === 'contact'
+        ? `<p>Official Email: <a href="mailto:${escapeHtml(FOUNDER_BRAND_IDENTITY.contactEmail)}">${escapeHtml(FOUNDER_BRAND_IDENTITY.contactEmail)}</a> · WhatsApp: <a href="${escapeHtml(FOUNDER_BRAND_IDENTITY.whatsappUrl)}" rel="noopener noreferrer">${escapeHtml(FOUNDER_BRAND_IDENTITY.whatsappDisplay)}</a></p>`
+        : '';
 
     return {
       title,
@@ -597,6 +614,7 @@ export function resolveRouteSeo(
         <main>
           <h1>${escapeHtml(page.title)}</h1>
           <p>${escapeHtml(page.subtitle)}</p>
+          ${contactNoscript}
           ${page.sections
             .map(
               (s) =>

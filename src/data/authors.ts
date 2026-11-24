@@ -16,8 +16,7 @@ export const AUTHOR_PROFILES: Record<string, AuthorProfile> = {
       'Maintenance of primary source links, factual corrections, and publication timestamps',
       'Engineering of TRENDVERSE web utilities, Blogger templates, and live feed adapters',
     ],
-    contactEmail: 'vickykumar80299@gmail.com',
-    repositoryUrl: 'https://github.com/thedevelopers-hub/trendverse',
+    contactEmail: 'ui.vicky2002@gmail.com',
   },
   'editorial-desk': {
     id: 'editorial-desk',
@@ -30,8 +29,7 @@ export const AUTHOR_PROFILES: Record<string, AuthorProfile> = {
       'Distinguishing verified factual reporting from analysis and background context',
       'Recording transparent update dates and reader-reported corrections',
     ],
-    contactEmail: 'vickykumar80299@gmail.com',
-    repositoryUrl: 'https://github.com/thedevelopers-hub/trendverse',
+    contactEmail: 'ui.vicky2002@gmail.com',
   },
 };
 

@@ -10,12 +10,12 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const policyLinks: Array<{ id: PolicyPageId; label: string }> = [
-    { id: 'about', label: 'About' },
-    { id: 'contact', label: 'Contact' },
-    { id: 'editorial-policy', label: 'Editorial Policy' },
-    { id: 'corrections-policy', label: 'Corrections Policy' },
+    { id: 'about', label: 'About Us' },
+    { id: 'contact', label: 'Contact Us' },
     { id: 'privacy-policy', label: 'Privacy Policy' },
-    { id: 'terms-and-conditions', label: 'Terms and Conditions' },
+    { id: 'terms-and-conditions', label: 'Terms & Conditions' },
+    { id: 'editorial-policy', label: 'Editorial Policy' },
+    { id: 'corrections-policy', label: 'Corrections & Attribution Policy' },
     { id: 'disclaimer', label: 'Disclaimer' },
   ];
 
@@ -50,9 +50,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
 
           <div className="md:col-span-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">
               Editorial Sections
-            </h3>
+            </h2>
             <ul className="space-y-2.5 text-sm">
               {EDITORIAL_CATEGORIES.map((cat) => {
                 const route: AppRoute = { view: 'category', slug: cat.slug };
@@ -72,9 +72,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
 
           <div className="md:col-span-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">
               Careers &amp; Tools
-            </h3>
+            </h2>
             <ul className="space-y-2.5 text-sm">
               {(
                 [
@@ -102,9 +102,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
 
           <div className="md:col-span-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-white mb-4">
               Institutional &amp; Policies
-            </h3>
+            </h2>
             <ul className="space-y-2.5 text-sm">
               {policyLinks.map((item) => {
                 const route: AppRoute = { view: 'policy', pageId: item.id };

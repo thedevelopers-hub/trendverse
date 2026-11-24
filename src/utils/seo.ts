@@ -114,6 +114,12 @@ function buildCoreGraphNodes(
       description:
         "Discover What's Next. An independent global digital media, live trend intelligence, careers, and free utilities platform founded and developed by Vicky.",
       founder: { '@id': `${origin}/#founder-vicky` },
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'editorial',
+        email: FOUNDER_BRAND_IDENTITY.contactEmail,
+        availableLanguage: 'English',
+      },
     },
     {
       '@type': 'WebSite',
@@ -338,8 +344,8 @@ export function applySeoForTools(toolId?: string): void {
 
 export function applySeoForPolicy(pageId: PolicyPageId): void {
   const page = POLICY_PAGES[pageId];
-  const title = `${page.title} — TRENDVERSE`;
-  const desc = page.subtitle.slice(0, 160);
+  const title = page.seoTitle || `${page.title} — TRENDVERSE`;
+  const desc = (page.seoDescription || page.subtitle).slice(0, 160);
   const origin = getCanonicalOrigin();
   const pageUrl = `${origin}/policy/${encodeURIComponent(pageId)}`;
   const pageType =
