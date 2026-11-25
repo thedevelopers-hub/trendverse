@@ -433,7 +433,26 @@ export default function App() {
     trackSpaPageView(route.view);
   }, [route, articles]);
 
+  const briefingAbortRef = useRef<AbortController | null>(null);
+  const briefingReqIdRef = useRef(0);
+  const briefingInFlightRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      briefingAbortRef.current?.abort();
+    };
+  }, []);
+
   const handleGenerateBriefing = async () => {
+    if (briefingInFlightRef.current) return;
+
+    briefingAbortRef.current?.abort();
+    const controller = new AbortController();
+    briefingAbortRef.current = controller;
+    briefingInFlightRef.current = true;
+    const reqId = ++briefingReqIdRef.current;
+
+    const timeoutId = window.setTimeout(() => controller.abort(), 35_000);
     setBriefingLoading(true);
     try {
       const res = await requestDailyBriefing({
@@ -441,7 +460,9 @@ export default function App() {
         country: briefingCountryPref,
         category: briefingCategoryPref,
         count: briefingCountPref,
+        signal: controller.signal,
       });
+      if (controller.signal.aborted || reqId !== briefingReqIdRef.current) return;
       setBriefingData(res);
       if (res.aiAvailable && res.stories.length > 0) {
         setBriefingHistory((prev) => {
@@ -455,9 +476,11 @@ export default function App() {
         });
       }
     } catch (err) {
+      if (reqId !== briefingReqIdRef.current) return;
+      const isTimeout = err instanceof Error && err.name === 'AbortError';
       setBriefingData({
         id: `briefing-err-${Date.now()}`,
-        aiAvailable: false,
+        aiAvailable: true,
         label: 'AI-Generated Summary',
         briefingDate: new Date().toISOString().slice(0, 10),
         generatedAt: new Date().toISOString(),
@@ -466,10 +489,18 @@ export default function App() {
         categoryPreference: briefingCategoryPref,
         overview: '',
         stories: [],
-        errorMessage: err instanceof Error ? err.message : 'Unable to reach briefing endpoint.',
+        errorMessage: isTimeout
+          ? 'The briefing request timed out. Please try again.'
+          : err instanceof Error
+          ? err.message
+          : 'Unable to reach briefing endpoint.',
       });
     } finally {
-      setBriefingLoading(false);
+      window.clearTimeout(timeoutId);
+      if (reqId === briefingReqIdRef.current) {
+        briefingInFlightRef.current = false;
+        setBriefingLoading(false);
+      }
     }
   };
 

@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import { getLiveNews, PUBLIC_NEWS_SOURCES } from './services/rssNewsAdapter.js';
 import { getGoogleTrends, TREND_GEO_OPTIONS } from './services/googleTrendsAdapter.js';
 import {
+  formatGeminiErrorMessage,
   generateDailyGlobalBriefing,
   isGeminiConfigured,
 } from './services/geminiBriefingAdapter.js';
@@ -278,12 +279,28 @@ export async function handleBriefingRequest(req: ApiRequest, res: ApiResponse): 
   if (handlePreflight(req, res, 'POST')) return;
   applyCacheControl(res, 'no-store, max-age=0', 'no-store');
 
+  let country = 'All Countries';
+  let category = 'All Categories';
+
   try {
     const body = await getJsonBody(req);
     const forceRefresh = Boolean(body.refreshNews);
-    const country = typeof body.country === 'string' ? body.country : 'All Countries';
-    const category = typeof body.category === 'string' ? body.category : 'All Categories';
-    const count = typeof body.count === 'number' ? body.count : 7;
+    country = typeof body.country === 'string' && body.country.trim() ? body.country.trim() : 'All Countries';
+    category = typeof body.category === 'string' && body.category.trim() ? body.category.trim() : 'All Categories';
+    const rawCount = Number(body.count);
+    const count = Number.isFinite(rawCount)
+      ? Math.min(10, Math.max(5, Math.round(rawCount)))
+      : 7;
+
+    if (!isGeminiConfigured()) {
+      const missingKeyResponse = await generateDailyGlobalBriefing([], {
+        country,
+        category,
+        count,
+      });
+      sendJson(res, 503, missingKeyResponse);
+      return;
+    }
 
     const newsData = await getLiveNews(forceRefresh);
     const briefing = await generateDailyGlobalBriefing(newsData.items, {
@@ -291,22 +308,22 @@ export async function handleBriefingRequest(req: ApiRequest, res: ApiResponse): 
       category,
       count,
     });
-    if (!briefing.aiAvailable) {
+    if (!briefing.aiAvailable || (Boolean(briefing.errorMessage) && briefing.stories.length === 0)) {
       sendJson(res, 503, briefing);
       return;
     }
     sendJson(res, 200, briefing);
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Gemini briefing generation failed.';
-    sendJson(res, 500, {
+    const message = formatGeminiErrorMessage(err);
+    sendJson(res, 503, {
       id: `briefing-err-${Date.now()}`,
       aiAvailable: isGeminiConfigured(),
       label: 'AI-Generated Summary',
       briefingDate: new Date().toISOString().slice(0, 10),
       generatedAt: new Date().toISOString(),
       modelName: 'gemini-4-hydrogen',
-      countryPreference: 'All Countries',
-      categoryPreference: 'All Categories',
+      countryPreference: country,
+      categoryPreference: category,
       overview: '',
       stories: [],
       errorMessage: message,
@@ -633,7 +650,7 @@ export async function handleCareersAiAssistRequest(
     }
     sendJson(res, 200, result);
   } catch (err) {
-    sendJson(res, 500, {
+    sendJson(res, 503, {
       aiAvailable: isGeminiConfigured(),
       mode: 'resume-review',
       modelName: 'gemini-4-hydrogen',
@@ -641,7 +658,7 @@ export async function handleCareersAiAssistRequest(
       suggestions: [],
       disclaimer:
         'Browser-local tools remain available without AI assistance.',
-      errorMessage: err instanceof Error ? err.message : 'Optional AI assistance temporarily unavailable.',
+      errorMessage: formatGeminiErrorMessage(err),
     });
   }
 }

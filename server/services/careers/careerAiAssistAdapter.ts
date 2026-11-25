@@ -1,6 +1,6 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 import { CareerAiAssistRequest, CareerAiAssistResponse } from '../../types.js';
-import { isGeminiConfigured } from '../geminiBriefingAdapter.js';
+import { formatGeminiErrorMessage, getGeminiApiKey } from '../geminiBriefingAdapter.js';
 
 const PRIMARY_MODEL = 'gemini-4-hydrogen';
 const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
@@ -12,7 +12,8 @@ export async function runCareerAiAssist(
   const disclaimer =
     'AI career feedback is optional assistance only. It does not guarantee ATS pass rates, interviews, or job selection. Review and personalize all output carefully.';
 
-  if (!isGeminiConfigured()) {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
     return {
       aiAvailable: false,
       mode: req.mode,
@@ -37,7 +38,7 @@ export async function runCareerAiAssist(
   };
 
   const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
+    apiKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
@@ -51,13 +52,17 @@ export async function runCareerAiAssist(
   let usedModel = PRIMARY_MODEL;
   let lastError: unknown = null;
 
-  for (const model of [PRIMARY_MODEL, FALLBACK_MODEL]) {
+  for (const candidate of [
+    { model: PRIMARY_MODEL, thinkingLevel: ThinkingLevel.LOW },
+    { model: FALLBACK_MODEL, thinkingLevel: ThinkingLevel.MINIMAL },
+  ]) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await ai.models.generateContent({
-          model,
+          model: candidate.model,
           contents: prompt,
           config: {
+            thinkingConfig: { thinkingLevel: candidate.thinkingLevel },
             systemInstruction:
               'You are a factual, practical international career advisor for students and early-career professionals. Never invent facts, degrees, or metrics not provided by the user.',
             responseMimeType: 'application/json',
@@ -75,14 +80,14 @@ export async function runCareerAiAssist(
           },
         });
         responseText = (res.text ?? '{}').trim();
-        usedModel = model;
+        usedModel = candidate.model;
         lastError = null;
         break;
       } catch (err) {
         lastError = err;
         const msg = err instanceof Error ? err.message : String(err);
         if (!msg.includes('503') && !msg.includes('429') && !msg.includes('UNAVAILABLE')) {
-          throw err;
+          throw new Error(formatGeminiErrorMessage(err));
         }
         await new Promise((r) => setTimeout(r, 450));
       }
@@ -91,7 +96,7 @@ export async function runCareerAiAssist(
   }
 
   if (lastError) {
-    throw lastError;
+    throw new Error(formatGeminiErrorMessage(lastError));
   }
 
   const parsed = JSON.parse(responseText || '{}') as {

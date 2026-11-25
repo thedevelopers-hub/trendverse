@@ -390,22 +390,35 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
         )}
 
         {/* Error / Unavailable AI State */}
-        {briefing && !loading && (!briefing.aiAvailable || briefing.errorMessage) && (
-          <div role="alert" className="rounded-xl border border-amber-400/30 bg-amber-950/30 p-5 text-sm text-amber-100">
-            <p className="font-semibold">60-Second Briefing Unavailable</p>
-            <p className="mt-1 text-xs text-amber-200/90">
-              {briefing.errorMessage ||
-                'Unable to generate AI summary right now. Verified raw headlines remain available in the Live News Center.'}
-            </p>
+        {briefing && !loading && (!briefing.aiAvailable || Boolean(briefing.errorMessage)) && (
+          <div role="alert" className="rounded-xl border border-amber-400/30 bg-amber-950/30 p-5 text-sm text-amber-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold">60-Second Briefing Unavailable</p>
+              <p className="mt-1 text-xs text-amber-200/90">
+                {briefing.errorMessage ||
+                  'Unable to generate AI summary right now. Verified raw headlines remain available in the Live News Center.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onGenerate}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50 shrink-0 self-start sm:self-auto cursor-pointer"
+            >
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Retry Briefing</span>
+            </button>
           </div>
         )}
 
         {/* Active Briefing + Audio Player */}
-        {briefing && !loading && briefing.aiAvailable && briefing.stories.length > 0 && (
+        {briefing && !loading && briefing.aiAvailable && !briefing.errorMessage && briefing.stories.length > 0 && (
           <div className="space-y-6">
             {/* Metadata & AI Label */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-400/25 bg-blue-950/40 px-4 py-3 text-xs text-slate-200">
-              <span className="font-semibold text-blue-300">{briefing.label}</span>
+              <span className="font-semibold text-blue-300">
+                {briefing.label} · {briefing.countryPreference} · {briefing.categoryPreference} ({briefing.stories.length} stories)
+              </span>
               <span className="text-slate-300">
                 Date: {briefing.briefingDate} · Generated:{' '}
                 {formatPublicationTimestamp(briefing.generatedAt, useUtc)}
