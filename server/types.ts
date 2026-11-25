@@ -105,6 +105,7 @@ export interface BriefingStoryDigest {
 export interface DailyBriefingResponse {
   id: string;
   aiAvailable: boolean;
+  fallbackMode?: boolean;
   label: string;
   briefingDate: string;
   generatedAt: string;
@@ -113,6 +114,7 @@ export interface DailyBriefingResponse {
   categoryPreference: string;
   overview: string;
   stories: BriefingStoryDigest[];
+  fallbackArticles?: LiveNewsItem[];
   note?: string;
   errorMessage?: string;
 }

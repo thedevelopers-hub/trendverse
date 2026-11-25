@@ -389,30 +389,122 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
           </div>
         )}
 
-        {/* Error / Unavailable AI State */}
-        {briefing && !loading && (!briefing.aiAvailable || Boolean(briefing.errorMessage)) && (
-          <div role="alert" className="rounded-xl border border-amber-400/30 bg-amber-950/30 p-5 text-sm text-amber-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-semibold">60-Second Briefing Unavailable</p>
-              <p className="mt-1 text-xs text-amber-200/90">
-                {briefing.errorMessage ||
-                  'Unable to generate AI summary right now. Verified raw headlines remain available in the Live News Center.'}
-              </p>
+        {/* Error / Unavailable AI State + Verified RSS Fallback Mode */}
+        {briefing && !loading && (!briefing.aiAvailable || briefing.fallbackMode || Boolean(briefing.errorMessage)) && (
+          <div className="space-y-6">
+            <div role="alert" className="rounded-xl border border-amber-400/30 bg-amber-950/30 p-5 text-sm text-amber-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold">
+                  {briefing.fallbackArticles && briefing.fallbackArticles.length > 0
+                    ? '60-Second AI Summary Temporarily Unavailable · Verified RSS Feed Active'
+                    : '60-Second Briefing Unavailable'}
+                </p>
+                <p className="mt-1 text-xs text-amber-200/90">
+                  {briefing.errorMessage ||
+                    'Unable to generate AI summary right now. Verified raw headlines remain available below and in the Live News Center.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onGenerate}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50 shrink-0 self-start sm:self-auto cursor-pointer"
+              >
+                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Retry Briefing</span>
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={onGenerate}
-              disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50 shrink-0 self-start sm:self-auto cursor-pointer"
-            >
-              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Retry Briefing</span>
-            </button>
+
+            {briefing.fallbackArticles && briefing.fallbackArticles.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/15 bg-[#13203b]/80 px-4 py-3 text-xs text-slate-200">
+                  <span className="font-semibold text-slate-100">
+                    {briefing.label} · {briefing.countryPreference} · {briefing.categoryPreference} ({briefing.fallbackArticles.length} verified articles)
+                  </span>
+                  <span className="text-slate-300">
+                    Retrieved: {formatPublicationTimestamp(briefing.generatedAt, useUtc)}
+                  </span>
+                </div>
+
+                {briefing.note && (
+                  <p className="text-xs text-slate-400">{briefing.note}</p>
+                )}
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {(mode === 'section'
+                    ? briefing.fallbackArticles.slice(0, 6)
+                    : briefing.fallbackArticles
+                  ).map((article, idx) => {
+                    const alreadySaved = savedDraftUrls.includes(article.url);
+                    return (
+                      <article
+                        key={article.id || article.url + idx}
+                        className="flex flex-col justify-between rounded-xl border border-white/10 bg-[#13203b]/80 p-5"
+                      >
+                        <div className="space-y-2.5">
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                            <span>
+                              <span className="font-mono-tabular font-semibold text-blue-400">
+                                {String(idx + 1).padStart(2, '0')}
+                              </span>{' '}
+                              · Verified RSS · {article.category} · {article.countryTag}
+                            </span>
+                            <time dateTime={article.publishedAt}>
+                              {formatPublicationTimestamp(article.publishedAt, useUtc)}
+                            </time>
+                          </div>
+
+                          <h3 className="font-display text-lg font-semibold text-white leading-snug">
+                            {article.title}
+                          </h3>
+
+                          <p className="text-xs leading-relaxed text-slate-200">{article.summary}</p>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <a
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-medium text-blue-400 hover:underline"
+                          >
+                            <span>{article.publisher}</span>
+                            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          </a>
+
+                          <button
+                            type="button"
+                            disabled={alreadySaved}
+                            onClick={() =>
+                              onSaveDraft({
+                                id: `draft-${Date.now()}-${idx}`,
+                                headline: article.title,
+                                category: article.category,
+                                summary: article.summary,
+                                whyItMatters: `Verified RSS dispatch from ${article.publisher}.`,
+                                sourceName: article.publisher,
+                                sourceUrl: article.url,
+                                createdAt: new Date().toISOString(),
+                                status: 'pending-human-review',
+                              })
+                            }
+                            className="inline-flex items-center gap-1 rounded-md border border-white/20 px-2.5 py-1 text-[11px] font-medium text-slate-200 hover:bg-white/10 disabled:opacity-50 cursor-pointer"
+                          >
+                            <FileCheck2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span>{alreadySaved ? 'In Editorial Drafts' : 'Queue for Human Review'}</span>
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Active Briefing + Audio Player */}
-        {briefing && !loading && briefing.aiAvailable && !briefing.errorMessage && briefing.stories.length > 0 && (
+        {briefing && !loading && briefing.aiAvailable && !briefing.fallbackMode && !briefing.errorMessage && briefing.stories.length > 0 && (
           <div className="space-y-6">
             {/* Metadata & AI Label */}
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-400/25 bg-blue-950/40 px-4 py-3 text-xs text-slate-200">
@@ -546,7 +638,7 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
                       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
                         <span>
                           <span className="font-mono-tabular font-semibold text-blue-400">
-                            0{idx + 1}
+                            {String(idx + 1).padStart(2, '0')}
                           </span>{' '}
                           · {story.category} · {story.countryTag}
                         </span>

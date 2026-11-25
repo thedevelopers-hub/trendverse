@@ -245,7 +245,18 @@ export default function App() {
   const [briefingHistory, setBriefingHistory] = useState<DailyBriefingResponse[]>(() => {
     try {
       const raw = localStorage.getItem(BRIEFING_HISTORY_KEY);
-      return raw ? (JSON.parse(raw) as DailyBriefingResponse[]) : [];
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as DailyBriefingResponse[];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(
+        (item) =>
+          item &&
+          item.aiAvailable === true &&
+          !item.fallbackMode &&
+          !item.errorMessage &&
+          Array.isArray(item.stories) &&
+          item.stories.length > 0
+      );
     } catch {
       return [];
     }
@@ -452,7 +463,7 @@ export default function App() {
     briefingInFlightRef.current = true;
     const reqId = ++briefingReqIdRef.current;
 
-    const timeoutId = window.setTimeout(() => controller.abort(), 35_000);
+    const timeoutId = window.setTimeout(() => controller.abort(), 42_000);
     setBriefingLoading(true);
     try {
       const res = await requestDailyBriefing({
@@ -464,7 +475,7 @@ export default function App() {
       });
       if (controller.signal.aborted || reqId !== briefingReqIdRef.current) return;
       setBriefingData(res);
-      if (res.aiAvailable && res.stories.length > 0) {
+      if (res.aiAvailable && !res.fallbackMode && !res.errorMessage && res.stories.length > 0) {
         setBriefingHistory((prev) => {
           const next = [res, ...prev.filter((p) => p.id !== res.id)].slice(0, 14);
           try {
@@ -478,10 +489,28 @@ export default function App() {
     } catch (err) {
       if (reqId !== briefingReqIdRef.current) return;
       const isTimeout = err instanceof Error && err.name === 'AbortError';
+      const localItems = newsData?.items ?? [];
+      const countryLower = briefingCountryPref.toLowerCase();
+      const catLower = briefingCategoryPref.toLowerCase();
+      const exact = localItems.filter(
+        (item) =>
+          (briefingCountryPref === 'All Countries' || item.countryTag.toLowerCase() === countryLower) &&
+          (briefingCategoryPref === 'All Categories' || item.category.toLowerCase() === catLower)
+      );
+      const partial = localItems.filter(
+        (item) =>
+          !exact.includes(item) &&
+          ((briefingCountryPref !== 'All Countries' && item.countryTag.toLowerCase() === countryLower) ||
+            (briefingCategoryPref !== 'All Categories' && item.category.toLowerCase() === catLower))
+      );
+      const rest = localItems.filter((item) => !exact.includes(item) && !partial.includes(item));
+      const clientFallback = [...exact, ...partial, ...rest].slice(0, briefingCountPref);
+
       setBriefingData({
         id: `briefing-err-${Date.now()}`,
-        aiAvailable: true,
-        label: 'AI-Generated Summary',
+        aiAvailable: false,
+        fallbackMode: true,
+        label: 'Fallback Mode · Verified Live RSS Headlines (AI Summary Unavailable)',
         briefingDate: new Date().toISOString().slice(0, 10),
         generatedAt: new Date().toISOString(),
         modelName: 'gemini-4-hydrogen',
@@ -489,11 +518,12 @@ export default function App() {
         categoryPreference: briefingCategoryPref,
         overview: '',
         stories: [],
+        fallbackArticles: clientFallback,
         errorMessage: isTimeout
-          ? 'The briefing request timed out. Please try again.'
+          ? 'The briefing request timed out. Displaying verified live RSS headlines below — please try again.'
           : err instanceof Error
           ? err.message
-          : 'Unable to reach briefing endpoint.',
+          : 'Unable to reach briefing endpoint. Displaying verified live RSS headlines below.',
       });
     } finally {
       window.clearTimeout(timeoutId);

@@ -4,7 +4,9 @@ import { getGoogleTrends, TREND_GEO_OPTIONS } from './services/googleTrendsAdapt
 import {
   formatGeminiErrorMessage,
   generateDailyGlobalBriefing,
+  getConfiguredBriefingModels,
   isGeminiConfigured,
+  selectFilteredCandidates,
 } from './services/geminiBriefingAdapter.js';
 import { runTrendBattleComparison } from './services/trendBattleAdapter.js';
 import { getAllCareerJobs } from './services/careers/jobProvidersAdapter.js';
@@ -281,6 +283,8 @@ export async function handleBriefingRequest(req: ApiRequest, res: ApiResponse): 
 
   let country = 'All Countries';
   let category = 'All Categories';
+  let count = 7;
+  let collectedNewsItems: Awaited<ReturnType<typeof getLiveNews>>['items'] = [];
 
   try {
     const body = await getJsonBody(req);
@@ -288,44 +292,52 @@ export async function handleBriefingRequest(req: ApiRequest, res: ApiResponse): 
     country = typeof body.country === 'string' && body.country.trim() ? body.country.trim() : 'All Countries';
     category = typeof body.category === 'string' && body.category.trim() ? body.category.trim() : 'All Categories';
     const rawCount = Number(body.count);
-    const count = Number.isFinite(rawCount)
+    count = Number.isFinite(rawCount)
       ? Math.min(10, Math.max(5, Math.round(rawCount)))
       : 7;
 
-    if (!isGeminiConfigured()) {
-      const missingKeyResponse = await generateDailyGlobalBriefing([], {
-        country,
-        category,
-        count,
-      });
-      sendJson(res, 503, missingKeyResponse);
-      return;
-    }
-
+    // RSS collection runs independently of Gemini availability
     const newsData = await getLiveNews(forceRefresh);
+    collectedNewsItems = newsData.items;
+
     const briefing = await generateDailyGlobalBriefing(newsData.items, {
       country,
       category,
       count,
+      forceRefresh,
     });
-    if (!briefing.aiAvailable || (Boolean(briefing.errorMessage) && briefing.stories.length === 0)) {
+    if (
+      briefing.fallbackMode ||
+      !briefing.aiAvailable ||
+      (Boolean(briefing.errorMessage) && briefing.stories.length === 0)
+    ) {
       sendJson(res, 503, briefing);
       return;
     }
     sendJson(res, 200, briefing);
   } catch (err) {
     const message = formatGeminiErrorMessage(err);
+    const { primary } = getConfiguredBriefingModels();
+    const { candidates, note } = selectFilteredCandidates(
+      collectedNewsItems,
+      country,
+      category,
+      count
+    );
     sendJson(res, 503, {
       id: `briefing-err-${Date.now()}`,
-      aiAvailable: isGeminiConfigured(),
-      label: 'AI-Generated Summary',
+      aiAvailable: false,
+      fallbackMode: true,
+      label: 'Fallback Mode · Verified Live RSS Headlines (AI Summary Unavailable)',
       briefingDate: new Date().toISOString().slice(0, 10),
       generatedAt: new Date().toISOString(),
-      modelName: 'gemini-4-hydrogen',
+      modelName: primary,
       countryPreference: country,
       categoryPreference: category,
       overview: '',
       stories: [],
+      fallbackArticles: candidates.slice(0, count),
+      note: note || undefined,
       errorMessage: message,
     });
   }

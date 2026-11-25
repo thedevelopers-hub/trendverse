@@ -5,11 +5,47 @@ import {
   LiveNewsItem,
 } from '../types.js';
 
-export const BRIEFING_PRIMARY_MODEL = 'gemini-4-hydrogen';
-export const BRIEFING_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
-const GEMINI_TIMEOUT_MS = 14_000;
+const ALLOWED_FREE_TEXT_MODELS = ['gemini-4-hydrogen', 'gemini-3.1-flash-lite'] as const;
+type SupportedBriefingModel = (typeof ALLOWED_FREE_TEXT_MODELS)[number];
+
+const DEPRECATED_MODEL_PATTERN = /^(gemini-1\.|gemini-2\.0|gemini-pro$|text-bison|chat-bison)/i;
+
+function resolveConfiguredModel(envValue: string | undefined, defaultModel: SupportedBriefingModel): SupportedBriefingModel {
+  const cleaned = (envValue || '').trim().replace(/^models\//i, '');
+  if (!cleaned || DEPRECATED_MODEL_PATTERN.test(cleaned)) {
+    return defaultModel;
+  }
+  if ((ALLOWED_FREE_TEXT_MODELS as readonly string[]).includes(cleaned)) {
+    return cleaned as SupportedBriefingModel;
+  }
+  return defaultModel;
+}
+
+export function getConfiguredBriefingModels(): {
+  primary: SupportedBriefingModel;
+  fallback: SupportedBriefingModel;
+} {
+  const primary = resolveConfiguredModel(process.env.GEMINI_PRIMARY_MODEL, 'gemini-4-hydrogen');
+  const rawFallback = resolveConfiguredModel(
+    process.env.GEMINI_FALLBACK_MODEL,
+    primary === 'gemini-3.1-flash-lite' ? 'gemini-4-hydrogen' : 'gemini-3.1-flash-lite'
+  );
+  return { primary, fallback: rawFallback };
+}
+
+export const BRIEFING_PRIMARY_MODEL = getConfiguredBriefingModels().primary;
+export const BRIEFING_FALLBACK_MODEL = getConfiguredBriefingModels().fallback;
+
+const GEMINI_TIMEOUT_MS = 12_000;
+const MODELS_LIST_TIMEOUT_MS = 3_000;
+const MAX_RETRY_ATTEMPTS = 3; // Maximum 3 retry attempts (up to 4 total attempts)
+const OVERALL_DEADLINE_MS = 28_000;
+const BRIEFING_CACHE_TTL_MS = 90_000;
+const MODEL_LIST_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const inFlightBriefings = new Map<string, Promise<DailyBriefingResponse>>();
+const recentBriefingsCache = new Map<string, { expiresAt: number; payload: DailyBriefingResponse }>();
+const verifiedModelsCache = new Map<string, { expiresAt: number; models: Set<string> }>();
 
 export function getGeminiApiKey(): string | null {
   const candidates = [process.env.GEMINI_API_KEY, process.env.GOOGLE_API_KEY];
@@ -49,7 +85,7 @@ export function formatGeminiErrorMessage(err: unknown): string {
     return 'The configured server GEMINI_API_KEY was rejected by the Gemini API. Verify the key in Vercel Environment Variables and redeploy.';
   }
   if (lower.includes('429') || lower.includes('resource_exhausted') || lower.includes('quota')) {
-    return 'Gemini API rate limit or quota reached temporarily. Please wait a moment and try generating the briefing again.';
+    return 'Gemini API rate limit or quota reached temporarily (429). Displaying verified live RSS headlines below — please retry in a moment.';
   }
   if (
     lower.includes('503') ||
@@ -57,19 +93,22 @@ export function formatGeminiErrorMessage(err: unknown): string {
     lower.includes('high demand') ||
     lower.includes('overloaded')
   ) {
-    return 'The Gemini API is temporarily experiencing high demand (503). Please try again in a few seconds.';
+    return 'The Gemini API is temporarily experiencing high demand (503). Displaying verified live RSS headlines below — please try again in a few seconds.';
+  }
+  if (lower.includes('500') || lower.includes('502') || lower.includes('504') || lower.includes('internal')) {
+    return 'The Gemini API encountered a temporary server error. Displaying verified live RSS headlines below — please retry shortly.';
   }
   if (
     lower.includes('abort') ||
     lower.includes('timeout') ||
     lower.includes('timed out')
   ) {
-    return 'The Gemini briefing request timed out. Please try again.';
+    return 'The Gemini briefing request timed out. Displaying verified live RSS headlines below — please try again.';
   }
   if (lower.includes('404') || lower.includes('not_found')) {
-    return 'The requested Gemini model endpoint returned 404. Please verify model availability.';
+    return 'The configured Gemini model endpoint is unavailable for this key. Displaying verified live RSS headlines below.';
   }
-  return 'Unable to generate the Gemini briefing right now. Verified live headlines remain available in the News Center.';
+  return 'The Gemini API is temporarily unavailable. Displaying verified live RSS headlines below — please try again.';
 }
 
 function isTimeoutError(err: unknown): boolean {
@@ -84,20 +123,62 @@ function isTransientGeminiError(err: unknown): boolean {
   return (
     lower.includes('503') ||
     lower.includes('429') ||
+    lower.includes('500') ||
+    lower.includes('502') ||
+    lower.includes('504') ||
     lower.includes('unavailable') ||
     lower.includes('resource_exhausted') ||
+    lower.includes('internal') ||
     lower.includes('high demand') ||
     lower.includes('overloaded') ||
     lower.includes('timeout') ||
     lower.includes('timed out') ||
     lower.includes('abort') ||
     lower.includes('econnreset') ||
+    lower.includes('etimedout') ||
+    lower.includes('enotfound') ||
+    lower.includes('socket hang up') ||
     lower.includes('fetch failed')
   );
 }
 
+function computeJitteredBackoffMs(retryNumber: number): number {
+  const exponentialBase = 400 * Math.pow(2, Math.max(0, retryNumber));
+  const jitter = Math.floor(Math.random() * 250);
+  return Math.min(3_000, exponentialBase + jitter);
+}
+
+async function getVerifiedAvailableModels(ai: GoogleGenAI, apiKey: string): Promise<Set<string>> {
+  const keyFingerprint = `${apiKey.length}:${apiKey.slice(-4)}`;
+  const cached = verifiedModelsCache.get(keyFingerprint);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.models;
+  }
+
+  const available = new Set<string>();
+  try {
+    const pager = await generateWithTimeout(ai.models.list(), MODELS_LIST_TIMEOUT_MS);
+    for await (const model of pager) {
+      const normalized = (model?.name || '').replace(/^models\//i, '').trim();
+      if (normalized && !DEPRECATED_MODEL_PATTERN.test(normalized)) {
+        available.add(normalized);
+      }
+      if (available.size >= 100) break;
+    }
+    if (available.size > 0) {
+      verifiedModelsCache.set(keyFingerprint, {
+        expiresAt: Date.now() + MODEL_LIST_CACHE_TTL_MS,
+        models: available,
+      });
+    }
+  } catch {
+    // Keep empty set when list endpoint transiently fails so configured primary can still be attempted
+  }
+  return available;
+}
+
 const COUNTRY_KEYWORD_MAP: Record<string, RegExp> = {
-  India: /\bindia\b|\bindian\b|\bnew delhi\b|\bmumbai\b|\bbengaluru\b|\bchennai\b/,
+  India: /\bindia\b|\bindian\b|\bnew delhi\b|\bmumbai\b|\bbengaluru\b|\bchennai\b|\bkolkata\b|\bhyderabad\b/,
   'United States': /\bunited states\b|\bu\.s\.?\b|\busa\b|\bwashington\b|\bnew york\b|\bcalifornia\b/,
   'United Kingdom': /\bunited kingdom\b|\buk\b|\bbritain\b|\bbritish\b|\blondon\b|\bengland\b/,
   Australia: /\baustralia\b|\baustralian\b|\bsydney\b|\bmelbourne\b|\bcanberra\b/,
@@ -116,7 +197,7 @@ const CATEGORY_KEYWORD_MAP: Record<string, RegExp> = {
   Business: /\bbusiness\b|\beconom|\bmarket\b|\binflation\b|\bbank\b|\btrade\b|\bfinanc|\bstock\b/,
   Science: /\bscience\b|\bresearch\b|\bphysics\b|\bbiology\b|\bmedical\b|\bstudy\b/,
   Space: /\bspace\b|\bnasa\b|\borbit\b|\brocket\b|\bmoon\b|\bmars\b|\btelescope\b|\bsatellite\b/,
-  Entertainment: /\bfilm\b|\bcinema\b|\bmusic\b|\bstream\b|\bseries\b|\btelevision\b|\baward\b/,
+  Entertainment: /\bfilm\b|\bcinema\b|\bmusic\b|\bstream\b|\bseries\b|\btelevision\b|\baward\b|\bactor\b|\bmovie\b|\bbollywood\b|\bhollywood\b/,
   Climate: /\bclimate\b|\bcarbon\b|\bemissions\b|\brenewable\b|\bwarming\b|\benergy\b|\bweather\b/,
 };
 
@@ -136,7 +217,7 @@ function matchesCategory(item: LiveNewsItem, categoryPref: string): boolean {
   return rx.test(`${item.title} ${item.summary}`);
 }
 
-function selectFilteredCandidates(
+export function selectFilteredCandidates(
   items: LiveNewsItem[],
   countryPref: string,
   categoryPref: string,
@@ -150,8 +231,8 @@ function selectFilteredCandidates(
   }
 
   const exactMatches: LiveNewsItem[] = [];
-  const primaryOnlyMatches: LiveNewsItem[] = [];
-  const secondaryMatches: LiveNewsItem[] = [];
+  const countryPriorityMatches: LiveNewsItem[] = [];
+  const categoryOnlyMatches: LiveNewsItem[] = [];
   const restItems: LiveNewsItem[] = [];
 
   for (const item of items) {
@@ -159,18 +240,24 @@ function selectFilteredCandidates(
     const catMatch = matchesCategory(item, categoryPref);
     if (cMatch && catMatch) {
       exactMatches.push(item);
-    } else if ((hasCountryFilter && cMatch) || (hasCategoryFilter && catMatch)) {
-      if (hasCategoryFilter && catMatch) {
-        primaryOnlyMatches.push(item);
-      } else {
-        secondaryMatches.push(item);
-      }
+    } else if (hasCountryFilter && cMatch) {
+      countryPriorityMatches.push(item);
+    } else if (hasCategoryFilter && catMatch) {
+      categoryOnlyMatches.push(item);
     } else {
       restItems.push(item);
     }
   }
 
-  const pool = [...exactMatches, ...primaryOnlyMatches, ...secondaryMatches, ...restItems];
+  // Prioritize India + selected category cleanly when both are chosen
+  const interleavedSecondary: LiveNewsItem[] = [];
+  const maxSecondaryLen = Math.max(countryPriorityMatches.length, categoryOnlyMatches.length);
+  for (let i = 0; i < maxSecondaryLen; i++) {
+    if (i < categoryOnlyMatches.length) interleavedSecondary.push(categoryOnlyMatches[i]);
+    if (i < countryPriorityMatches.length) interleavedSecondary.push(countryPriorityMatches[i]);
+  }
+
+  const pool = [...exactMatches, ...interleavedSecondary, ...restItems];
   const notes: string[] = [];
 
   if (exactMatches.length >= targetCount) {
@@ -184,7 +271,7 @@ function selectFilteredCandidates(
       );
     } else {
       notes.push(
-        `Matched ${exactMatches.length} stories for ${countryPref} + ${categoryPref}; supplemented with related verified dispatches to reach ${targetCount} stories.`
+        `Matched ${exactMatches.length} stories for ${countryPref} + ${categoryPref}; supplemented with related ${countryPref} and ${categoryPref} verified dispatches to reach ${targetCount} stories.`
       );
     }
   } else if (hasCountryFilter && exactMatches.length < targetCount) {
@@ -263,6 +350,7 @@ export interface BriefingPreferences {
   country?: string;
   category?: string;
   count?: number;
+  forceRefresh?: boolean;
 }
 
 async function generateWithTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -279,6 +367,38 @@ async function generateWithTimeout<T>(promise: Promise<T>, timeoutMs: number): P
   }
 }
 
+function buildFallbackResponse(params: {
+  id: string;
+  nowIso: string;
+  todayDate: string;
+  modelName: string;
+  countryPref: string;
+  categoryPref: string;
+  candidates: LiveNewsItem[];
+  targetCount: number;
+  note?: string;
+  errorMessage: string;
+  label?: string;
+}): DailyBriefingResponse {
+  const fallbackArticles = params.candidates.slice(0, params.targetCount);
+  return {
+    id: params.id,
+    aiAvailable: false,
+    fallbackMode: true,
+    label: params.label || 'Fallback Mode · Verified Live RSS Headlines (AI Summary Unavailable)',
+    briefingDate: params.todayDate,
+    generatedAt: params.nowIso,
+    modelName: params.modelName,
+    countryPreference: params.countryPref,
+    categoryPreference: params.categoryPref,
+    overview: '',
+    stories: [],
+    fallbackArticles,
+    note: params.note || undefined,
+    errorMessage: params.errorMessage,
+  };
+}
+
 export async function generateDailyGlobalBriefing(
   items: LiveNewsItem[],
   prefs: BriefingPreferences = {}
@@ -289,57 +409,77 @@ export async function generateDailyGlobalBriefing(
   const categoryPref = prefs.category?.trim() || 'All Categories';
   const targetCount = Math.min(10, Math.max(5, Number(prefs.count || 7)));
 
+  const { primary: primaryModel, fallback: fallbackModel } = getConfiguredBriefingModels();
   const baseId = `briefing-${todayDate}-${Date.now()}`;
-  const apiKey = getGeminiApiKey();
+  const { candidates, note } = selectFilteredCandidates(
+    items,
+    countryPref,
+    categoryPref,
+    targetCount
+  );
 
+  const apiKey = getGeminiApiKey();
   if (!apiKey) {
-    return {
+    return buildFallbackResponse({
       id: baseId,
-      aiAvailable: false,
-      label: 'AI-Generated Summary (Requires Server Gemini Configuration)',
-      briefingDate: todayDate,
-      generatedAt: nowIso,
-      modelName: BRIEFING_PRIMARY_MODEL,
-      countryPreference: countryPref,
-      categoryPreference: categoryPref,
-      overview: '',
-      stories: [],
+      nowIso,
+      todayDate,
+      modelName: primaryModel,
+      countryPref,
+      categoryPref,
+      candidates,
+      targetCount,
+      note,
+      label: 'Fallback Mode · Verified Live RSS Headlines (Server Gemini Key Not Configured)',
       errorMessage:
-        'GEMINI_API_KEY is not configured in the active server environment. Set GEMINI_API_KEY in Vercel Environment Variables and redeploy to activate 60-Second Briefing.',
-    };
+        'GEMINI_API_KEY is not configured in the active server environment. Displaying verified live RSS headlines below.',
+    });
   }
 
   if (items.length === 0) {
     return {
       id: baseId,
-      aiAvailable: true,
-      label: 'AI-Generated Summary',
+      aiAvailable: false,
+      fallbackMode: true,
+      label: 'Live RSS Feeds Temporarily Unavailable',
       briefingDate: todayDate,
       generatedAt: nowIso,
-      modelName: BRIEFING_PRIMARY_MODEL,
+      modelName: primaryModel,
       countryPreference: countryPref,
       categoryPreference: categoryPref,
       overview: '',
       stories: [],
+      fallbackArticles: [],
       errorMessage:
         'Live RSS news feeds are temporarily unavailable, so no verified stories could be retrieved to summarize.',
     };
   }
 
   const dedupeKey = `${countryPref}::${categoryPref}::${targetCount}`;
+  const topUrlsSignature = candidates.slice(0, 3).map((c) => c.url).join('|');
+  const cacheKey = `${dedupeKey}::${topUrlsSignature}`;
+
+  if (!prefs.forceRefresh) {
+    const cached = recentBriefingsCache.get(cacheKey);
+    if (
+      cached &&
+      cached.expiresAt > Date.now() &&
+      cached.payload.aiAvailable &&
+      !cached.payload.fallbackMode &&
+      cached.payload.stories.length > 0
+    ) {
+      return cached.payload;
+    }
+  }
+
   const existing = inFlightBriefings.get(dedupeKey);
   if (existing) {
     return existing;
   }
 
-  const runPromise = (async (): Promise<DailyBriefingResponse> => {
-    const { candidates, note } = selectFilteredCandidates(
-      items,
-      countryPref,
-      categoryPref,
-      targetCount
-    );
+  const startedAtMs = Date.now();
 
+  const runPromise = (async (): Promise<DailyBriefingResponse> => {
     const ai = new GoogleGenAI({
       apiKey,
       httpOptions: {
@@ -374,25 +514,56 @@ export async function generateDailyGlobalBriefing(
       JSON.stringify(digestInput),
     ].join('\n');
 
-    const candidateModels: Array<{ model: string; thinkingLevel: ThinkingLevel; maxAttempts: number }> = [
-      { model: BRIEFING_PRIMARY_MODEL, thinkingLevel: ThinkingLevel.LOW, maxAttempts: 2 },
-      { model: BRIEFING_FALLBACK_MODEL, thinkingLevel: ThinkingLevel.MINIMAL, maxAttempts: 1 },
+    // Verify available models for the configured API key before switching to fallback
+    const verifiedModels = await getVerifiedAvailableModels(ai, apiKey);
+
+    const modelExecutionPlan: Array<{
+      model: SupportedBriefingModel;
+      thinkingLevel: ThinkingLevel;
+      attempts: number;
+    }> = [
+      {
+        model: primaryModel,
+        thinkingLevel: primaryModel === 'gemini-3.1-flash-lite' ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW,
+        attempts: 2, // Initial try + 1 retry on primary before checking fallback
+      },
     ];
 
+    const fallbackAllowedForKey =
+      fallbackModel !== primaryModel &&
+      (verifiedModels.size === 0 || verifiedModels.has(fallbackModel));
+
+    if (fallbackAllowedForKey) {
+      modelExecutionPlan.push({
+        model: fallbackModel,
+        thinkingLevel: fallbackModel === 'gemini-3.1-flash-lite' ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW,
+        attempts: 2, // Up to 2 attempts on verified fallback (capped at MAX_RETRY_ATTEMPTS total retries)
+      });
+    }
+
     let responseText = '';
-    let usedModel = BRIEFING_PRIMARY_MODEL;
+    let usedModel: string = primaryModel;
     let lastError: unknown = null;
+    let retriesUsed = 0;
 
     try {
-      for (const candidate of candidateModels) {
-        for (let attempt = 0; attempt < candidate.maxAttempts; attempt++) {
+      for (const stage of modelExecutionPlan) {
+        if (verifiedModels.size > 0 && !verifiedModels.has(stage.model)) {
+          continue;
+        }
+
+        for (let stageAttempt = 0; stageAttempt < stage.attempts; stageAttempt++) {
+          const remainingBudgetMs = OVERALL_DEADLINE_MS - (Date.now() - startedAtMs);
+          if (remainingBudgetMs < 3_500) break;
+
           try {
+            const perAttemptTimeout = Math.min(GEMINI_TIMEOUT_MS, remainingBudgetMs);
             const response = await generateWithTimeout(
               ai.models.generateContent({
-                model: candidate.model,
+                model: stage.model,
                 contents: prompt,
                 config: {
-                  thinkingConfig: { thinkingLevel: candidate.thinkingLevel },
+                  thinkingConfig: { thinkingLevel: stage.thinkingLevel },
                   systemInstruction:
                     'Produce concise, factual, neutral international newsroom briefings in global English grounded strictly in the provided RSS dataset.',
                   responseMimeType: 'application/json',
@@ -436,7 +607,7 @@ export async function generateDailyGlobalBriefing(
                   },
                 },
               }),
-              GEMINI_TIMEOUT_MS
+              perAttemptTimeout
             );
 
             const text = (response.text ?? '').trim();
@@ -444,7 +615,7 @@ export async function generateDailyGlobalBriefing(
               throw new Error('Empty response received from Gemini API.');
             }
             responseText = text;
-            usedModel = candidate.model;
+            usedModel = stage.model;
             lastError = null;
             break;
           } catch (err) {
@@ -452,32 +623,38 @@ export async function generateDailyGlobalBriefing(
             if (!isTransientGeminiError(err)) {
               throw err;
             }
-            // If this model attempt timed out, fail over immediately to fallback model
-            if (isTimeoutError(err)) {
+            if (retriesUsed >= MAX_RETRY_ATTEMPTS) {
               break;
             }
-            if (attempt + 1 < candidate.maxAttempts) {
-              await new Promise((r) => setTimeout(r, 350));
+            retriesUsed++;
+            const backoffMs = computeJitteredBackoffMs(retriesUsed - 1);
+            if (Date.now() - startedAtMs + backoffMs + 3_500 > OVERALL_DEADLINE_MS) {
+              break;
+            }
+            await new Promise((r) => setTimeout(r, backoffMs));
+            // On timeout of primary, jump straight to fallback stage after jittered backoff
+            if (isTimeoutError(err)) {
+              break;
             }
           }
         }
         if (!lastError && responseText) break;
+        if (retriesUsed > MAX_RETRY_ATTEMPTS) break;
       }
 
-      if (lastError) {
-        return {
+      if (lastError || !responseText) {
+        return buildFallbackResponse({
           id: baseId,
-          aiAvailable: true,
-          label: 'AI-Generated Summary',
-          briefingDate: todayDate,
-          generatedAt: nowIso,
+          nowIso,
+          todayDate,
           modelName: usedModel,
-          countryPreference: countryPref,
-          categoryPreference: categoryPref,
-          overview: '',
-          stories: [],
+          countryPref,
+          categoryPref,
+          candidates,
+          targetCount,
+          note,
           errorMessage: formatGeminiErrorMessage(lastError),
-        };
+        });
       }
 
       const parsed = JSON.parse(responseText || '{}') as {
@@ -488,25 +665,25 @@ export async function generateDailyGlobalBriefing(
       const groundedStories = groundStoriesToFeed(parsed.stories, digestInput, targetCount);
 
       if (groundedStories.length === 0) {
-        return {
+        return buildFallbackResponse({
           id: baseId,
-          aiAvailable: true,
-          label: 'AI-Generated Summary',
-          briefingDate: todayDate,
-          generatedAt: nowIso,
+          nowIso,
+          todayDate,
           modelName: usedModel,
-          countryPreference: countryPref,
-          categoryPreference: categoryPref,
-          overview: '',
-          stories: [],
+          countryPref,
+          categoryPref,
+          candidates,
+          targetCount,
+          note,
           errorMessage:
-            'Unable to match the generated summary cleanly against verified RSS sources. Please try again.',
-        };
+            'Unable to match the AI summary cleanly against verified RSS sources. Displaying verified RSS headlines below — please try again.',
+        });
       }
 
-      return {
+      const successPayload: DailyBriefingResponse = {
         id: baseId,
         aiAvailable: true,
+        fallbackMode: false,
         label: 'AI-Generated Summary · Grounded in Live RSS Feeds',
         briefingDate: todayDate,
         generatedAt: nowIso,
@@ -517,20 +694,26 @@ export async function generateDailyGlobalBriefing(
         stories: groundedStories,
         note: note || undefined,
       };
+
+      recentBriefingsCache.set(cacheKey, {
+        expiresAt: Date.now() + BRIEFING_CACHE_TTL_MS,
+        payload: successPayload,
+      });
+
+      return successPayload;
     } catch (err) {
-      return {
+      return buildFallbackResponse({
         id: baseId,
-        aiAvailable: true,
-        label: 'AI-Generated Summary',
-        briefingDate: todayDate,
-        generatedAt: nowIso,
+        nowIso,
+        todayDate,
         modelName: usedModel,
-        countryPreference: countryPref,
-        categoryPreference: categoryPref,
-        overview: '',
-        stories: [],
+        countryPref,
+        categoryPref,
+        candidates,
+        targetCount,
+        note,
         errorMessage: formatGeminiErrorMessage(err),
-      };
+      });
     }
   })().finally(() => {
     inFlightBriefings.delete(dedupeKey);

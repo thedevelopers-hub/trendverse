@@ -88,6 +88,13 @@ export const PUBLIC_NEWS_SOURCES: FeedSourceConfig[] = [
     countryTag: 'United Kingdom',
   },
   {
+    id: 'the-hindu-entertainment',
+    name: 'The Hindu Entertainment',
+    url: 'https://www.thehindu.com/entertainment/feeder/default.rss',
+    category: 'Entertainment',
+    countryTag: 'India',
+  },
+  {
     id: 'un-climate',
     name: 'UN News Climate',
     url: 'https://news.un.org/feed/subscribe/en/news/topic/climate-change/feed/rss.xml',
@@ -185,6 +192,47 @@ function areTitlesSimilar(a: Set<string>, b: Set<string>): boolean {
   return similarity >= 0.72;
 }
 
+function isValidHttpUrl(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function canonicalizeArticleUrl(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    const trackingParams = ['at_medium', 'at_campaign', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+    for (const p of trackingParams) {
+      parsed.searchParams.delete(p);
+    }
+    return `${parsed.origin}${parsed.pathname}${parsed.search}`.toLowerCase();
+  } catch {
+    return rawUrl.split('?')[0].toLowerCase();
+  }
+}
+
+function extractEntryUrl(rawLink: unknown): string {
+  if (typeof rawLink === 'string') return rawLink.trim();
+  if (Array.isArray(rawLink)) {
+    const preferred =
+      rawLink.find((l) => l && typeof l === 'object' && (l as Record<string, unknown>)['@_rel'] === 'alternate') ||
+      rawLink.find((l) => l && typeof l === 'object' && typeof (l as Record<string, unknown>)['@_href'] === 'string');
+    if (preferred && typeof preferred === 'object') {
+      return String((preferred as Record<string, unknown>)['@_href'] || (preferred as Record<string, unknown>)['#text'] || '').trim();
+    }
+    if (typeof rawLink[0] === 'string') return rawLink[0].trim();
+    return '';
+  }
+  if (rawLink && typeof rawLink === 'object') {
+    const obj = rawLink as Record<string, unknown>;
+    return String(obj['@_href'] || obj['#text'] || '').trim();
+  }
+  return '';
+}
+
 function deduplicateItems(items: LiveNewsItem[]): { unique: LiveNewsItem[]; duplicatesRemoved: number } {
   const seenUrls = new Set<string>();
   const seenTokenSets: Set<string>[] = [];
@@ -192,7 +240,7 @@ function deduplicateItems(items: LiveNewsItem[]): { unique: LiveNewsItem[]; dupl
   let duplicatesRemoved = 0;
 
   for (const item of items) {
-    const cleanUrl = item.url.split('?')[0].toLowerCase();
+    const cleanUrl = canonicalizeArticleUrl(item.url);
     if (seenUrls.has(cleanUrl)) {
       duplicatesRemoved++;
       continue;
@@ -217,7 +265,7 @@ async function fetchSingleSource(source: FeedSourceConfig): Promise<LiveNewsItem
 
   try {
     const response = await fetch(source.url, {
-      signal: AbortSignal.timeout(4800),
+      signal: AbortSignal.timeout(5000),
       headers: {
         'User-Agent': 'TRENDVERSE-Newsroom/2.0 (RSS Reader)',
         Accept: 'application/rss+xml, application/xml, text/xml, */*',
@@ -245,32 +293,31 @@ async function fetchSingleSource(source: FeedSourceConfig): Promise<LiveNewsItem
         : [atomFeed.entry as Record<string, unknown>]
       : [];
 
-    const sixHoursAgoMs = Date.now() - 6 * 60 * 60 * 1000;
+    const nowMs = Date.now();
+    const sixHoursAgoMs = nowMs - 6 * 60 * 60 * 1000;
 
     const mapped: LiveNewsItem[] = rawEntries
       .slice(0, 12)
       .map((entry, idx): LiveNewsItem | null => {
         const title = stripHtml(entry.title);
-        const rawLink = entry.link as string | { '@_href'?: string } | Array<{ '@_href'?: string }> | undefined;
-        const url =
-          typeof rawLink === 'string'
-            ? rawLink.trim()
-            : Array.isArray(rawLink)
-            ? String(rawLink[0]?.['@_href'] || '').trim()
-            : String(rawLink?.['@_href'] || '').trim();
+        const url = extractEntryUrl(entry.link);
 
-        if (!title || !url) return null;
+        if (!title || !url || !isValidHttpUrl(url)) return null;
+
+        // Preserve original publication timestamp strictly — never fabricate current date for undated items
+        const rawDateValue = entry.pubDate || entry.published || entry.updated || entry['dc:date'];
+        if (!rawDateValue) return null;
+        const rawDate = String(rawDateValue).trim();
+        const parsedTime = Date.parse(rawDate);
+        if (Number.isNaN(parsedTime)) return null;
+
+        const publishedIso = new Date(parsedTime).toISOString();
+        const isBreakingEligible =
+          parsedTime <= nowMs + 5 * 60 * 1000 && parsedTime >= sixHoursAgoMs;
 
         const rawDesc = stripHtml(entry.description || entry.summary || entry['content:encoded'] || '');
         const summary =
           rawDesc.length > 210 ? `${rawDesc.slice(0, 207).trim()}...` : rawDesc || `Published by ${source.name}.`;
-
-        const rawDate = String(
-          entry.pubDate || entry.published || entry.updated || entry['dc:date'] || nowIso
-        );
-        const parsedTime = Date.parse(rawDate);
-        const publishedIso = Number.isNaN(parsedTime) ? nowIso : new Date(parsedTime).toISOString();
-        const isBreakingEligible = !Number.isNaN(parsedTime) && parsedTime >= sixHoursAgoMs;
 
         return {
           id: `${source.id}-${idx}-${Buffer.from(url).toString('base64').slice(0, 12)}`,
