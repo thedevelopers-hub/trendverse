@@ -4,6 +4,7 @@ import bloggerXmlSource from '../../blogger/trendverse-theme.xml?raw';
 import { AppRoute, EditorialDraft } from '../types/editorial';
 import { EDITORIAL_WORKFLOW_STEPS } from '../data/workflowAndPolicies';
 import { fetchIntegrationsHealth, IntegrationsHealth } from '../services/newsroomApi';
+import { trackFormSubmit } from '../utils/thirdPartyScripts';
 
 interface BloggerThemeHubProps {
   connectedBlogUrl: string;
@@ -83,6 +84,9 @@ export const BloggerThemeHub: React.FC<BloggerThemeHubProps> = ({
 
   const handleFeedSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (blogUrlInput.trim()) {
+      trackFormSubmit({ formName: 'connect_blogger_feed', formLocation: 'blogger_hub' });
+    }
     void onConnectBlog(blogUrlInput);
   };
 

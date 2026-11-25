@@ -22,6 +22,7 @@ import { CareerAiAssistResponse } from '../../../server/types';
 import { CareerToolId } from '../../types/editorial';
 import { requestCareerAiAssist } from '../../services/careersApi';
 import { ApplicationTrackerEntry } from '../../utils/careerPreferences';
+import { trackFormSubmit } from '../../utils/thirdPartyScripts';
 
 interface CareerToolsSuiteProps {
   activeTool: CareerToolId;
@@ -301,6 +302,11 @@ export const CareerToolsSuite: React.FC<CareerToolsSuiteProps> = ({
       updatedAt: new Date().toISOString(),
     };
     onSaveApplications([entry, ...applications]);
+    trackFormSubmit({
+      formName: 'career_application_tracker',
+      formLocation: 'careers_tools',
+      formCategory: trackerKind,
+    });
     setTrkTitle('');
     setTrkOrg('');
     setTrkSalary('');

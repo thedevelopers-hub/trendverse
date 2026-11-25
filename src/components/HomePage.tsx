@@ -20,6 +20,7 @@ import {
 import { AppRoute, Article, EditorialDraft, ToolId } from '../types/editorial';
 import { EDITORIAL_CATEGORIES } from '../data/categories';
 import { routeToUrl } from '../utils/routes';
+import { trackCtaClick, trackFormSubmit } from '../utils/thirdPartyScripts';
 import { formatPublicationTimestamp, formatRelativeTime } from '../utils/timeFormat';
 import { VisitorActivityState } from '../utils/visitorActivity';
 import { EditorialVisual } from './EditorialVisual';
@@ -211,6 +212,7 @@ export const HomePage: React.FC<HomePageProps> = ({
     setNewsletterError('');
     setNewsletterSubscribed(true);
     setEmail('');
+    trackFormSubmit({ formName: 'newsletter_digest', formLocation: 'homepage' });
   };
 
   const handleSpaNav = (e: React.MouseEvent, route: AppRoute) => {
@@ -282,7 +284,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <a
                     href={routeToUrl({ view: 'article', slug: heroArticle.slug })}
-                    onClick={(e) => handleSpaNav(e, { view: 'article', slug: heroArticle.slug })}
+                    onClick={(e) => {
+                      trackCtaClick({
+                        ctaName: 'read_featured_editorial',
+                        ctaLocation: 'hero',
+                        destination: routeToUrl({ view: 'article', slug: heroArticle.slug }),
+                      });
+                      handleSpaNav(e, { view: 'article', slug: heroArticle.slug });
+                    }}
                     className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition-colors cursor-pointer"
                   >
                     <span>Read Editorial</span>
@@ -290,7 +299,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </a>
                   <a
                     href={routeToUrl({ view: 'briefing' })}
-                    onClick={(e) => handleSpaNav(e, { view: 'briefing' })}
+                    onClick={(e) => {
+                      trackCtaClick({
+                        ctaName: 'open_60s_briefing',
+                        ctaLocation: 'hero',
+                        destination: '/briefing',
+                      });
+                      handleSpaNav(e, { view: 'briefing' });
+                    }}
                     className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-4 py-2.5 text-sm font-medium text-slate-200 hover:bg-white/10 transition-colors cursor-pointer"
                   >
                     Your World in 60s
@@ -353,7 +369,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </div>
                 <a
                   href={routeToUrl({ view: 'news-center' })}
-                  onClick={(e) => handleSpaNav(e, { view: 'news-center' })}
+                  onClick={(e) => {
+                    trackCtaClick({
+                      ctaName: 'browse_news_desks',
+                      ctaLocation: 'hero_wire',
+                      destination: '/news-center',
+                    });
+                    handleSpaNav(e, { view: 'news-center' });
+                  }}
                   className="mt-3 pt-2.5 border-t border-white/10 inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
                 >
                   <span>Browse all 10 news desks</span>
@@ -606,7 +629,14 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
           <a
             href={routeToUrl({ view: 'tools', toolId: 'word-counter' })}
-            onClick={(e) => handleSpaNav(e, { view: 'tools', toolId: 'word-counter' })}
+            onClick={(e) => {
+              trackCtaClick({
+                ctaName: 'open_tool_suite',
+                ctaLocation: 'home_tools',
+                destination: '/tools/word-counter',
+              });
+              handleSpaNav(e, { view: 'tools', toolId: 'word-counter' });
+            }}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 cursor-pointer shrink-0"
           >
             <span>Open Full Tool Suite</span>

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { CareerOpportunity } from '../../../server/types';
 import { formatRelativeTime } from '../../utils/timeFormat';
+import { trackCtaClick, trackFormSubmit } from '../../utils/thirdPartyScripts';
 
 interface JobListingCardProps {
   job: CareerOpportunity;
@@ -70,6 +71,11 @@ export const JobListingCard: React.FC<JobListingCardProps> = ({
 
   const handleConfirmReport = (e: React.FormEvent) => {
     e.preventDefault();
+    trackFormSubmit({
+      formName: 'report_job_listing',
+      formLocation: 'careers_listing',
+      formCategory: reportReason,
+    });
     onReportListing(job, reportReason);
     setReportOpen(false);
   };
@@ -281,7 +287,14 @@ export const JobListingCard: React.FC<JobListingCardProps> = ({
             href={job.applicationUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => onViewOpportunity(job)}
+            onClick={() => {
+              trackCtaClick({
+                ctaName: 'apply_original_source',
+                ctaLocation: 'careers_listing',
+                destination: job.sourceName,
+              });
+              onViewOpportunity(job);
+            }}
             className="inline-flex items-center gap-1.5 rounded-lg bg-[#0b1324] px-4 py-2 text-xs font-semibold text-white hover:bg-blue-600 transition-colors"
           >
             <span>Apply on Original Source</span>

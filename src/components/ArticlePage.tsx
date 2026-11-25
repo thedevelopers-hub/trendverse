@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Check, ExternalLink, FileCheck2, Link2, Share2 }
 import { AppRoute, Article } from '../types/editorial';
 import { getAuthorProfile } from '../data/authors';
 import { routeToUrl } from '../utils/routes';
+import { trackCtaClick } from '../utils/thirdPartyScripts';
 import { EditorialVisual } from './EditorialVisual';
 import { AdSlot } from './AdSlot';
 
@@ -37,6 +38,11 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, 
   }, [allArticles, article]);
 
   const handleCopyLink = async () => {
+    trackCtaClick({
+      ctaName: 'copy_article_link',
+      ctaLocation: 'article_header',
+      destination: routeToUrl({ view: 'article', slug: article.slug }),
+    });
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { AppRoute } from '../types/editorial';
 import { routeToUrl } from '../utils/routes';
+import { trackCtaClick } from '../utils/thirdPartyScripts';
 
 interface CareersHomeHighlightProps {
   onNavigate: (route: AppRoute) => void;
@@ -90,7 +91,14 @@ export const CareersHomeHighlight: React.FC<CareersHomeHighlightProps> = ({ onNa
           </div>
           <a
             href={routeToUrl({ view: 'careers', tab: 'overview' })}
-            onClick={(e) => handleSpaNav(e, { view: 'careers', tab: 'overview' })}
+            onClick={(e) => {
+              trackCtaClick({
+                ctaName: 'open_careers_portal',
+                ctaLocation: 'home_careers_highlight',
+                destination: '/careers',
+              });
+              handleSpaNav(e, { view: 'careers', tab: 'overview' });
+            }}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 transition-colors self-start cursor-pointer shrink-0"
           >
             <span>Open Careers Portal</span>

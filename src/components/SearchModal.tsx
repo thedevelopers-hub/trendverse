@@ -4,6 +4,7 @@ import { LiveNewsItem, TrendItem } from '../../server/types';
 import { AppRoute, Article, ToolId } from '../types/editorial';
 import { AI_TOOLS_DIRECTORY } from '../data/aiDirectory';
 import { formatRelativeTime } from '../utils/timeFormat';
+import { trackFormSubmit } from '../utils/thirdPartyScripts';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -166,6 +167,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           onSubmit={(e) => {
             e.preventDefault();
             recordSearch(query);
+            if (query.trim().length >= 2) {
+              trackFormSubmit({
+                formName: 'site_search',
+                formLocation: 'search_modal',
+                formCategory: scopeFilter,
+              });
+            }
           }}
           className="flex items-center gap-3 border-b border-slate-200 px-4 py-3.5"
         >

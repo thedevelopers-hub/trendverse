@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Menu, Search, X } from 'lucide-react';
 import { AppRoute } from '../types/editorial';
 import { routeToUrl } from '../utils/routes';
+import { trackCtaClick } from '../utils/thirdPartyScripts';
 
 interface HeaderProps {
   currentRoute: AppRoute;
@@ -94,7 +95,10 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, onOpen
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={onOpenSearch}
+            onClick={() => {
+              trackCtaClick({ ctaName: 'open_search', ctaLocation: 'header' });
+              onOpenSearch();
+            }}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-blue-500 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
             <Search className="h-3.5 w-3.5" aria-hidden="true" />

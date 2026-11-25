@@ -170,12 +170,12 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
   'privacy-policy': {
     id: 'privacy-policy',
     title: 'Privacy Policy',
-    seoTitle: 'Privacy Policy — Consent Mode, GA4, GTM & Cookies | TRENDVERSE',
+    seoTitle: 'Privacy Policy — Consent Mode, GA4 & Cookies | TRENDVERSE',
     seoDescription:
-      'Read how TRENDVERSE handles Google Consent Mode v2, GTM (GTM-TXW2Z9KR), GA4 (G-TN4QF7535G), AdSense, browser storage, and your privacy rights.',
+      'Read how TRENDVERSE handles Google Consent Mode v2, Google Analytics 4 (G-TN4QF7535G), AdSense, browser storage, and your privacy rights.',
     subtitle:
-      'Transparent disclosure of how TRENDVERSE uses Google Tag Manager, Google Analytics 4, Google Consent Mode v2, advertising controls, and browser-local storage.',
-    lastUpdated: 'November 24, 2026',
+      'Transparent disclosure of how TRENDVERSE uses Google Analytics 4 (gtag.js), Google Consent Mode v2, advertising controls, and browser-local storage.',
+    lastUpdated: 'November 25, 2026',
     sections: [
       {
         heading: '1. Scope & Data Controller Contact',
@@ -184,12 +184,12 @@ export const POLICY_PAGES: Record<PolicyPageId, PolicyContent> = {
         ],
       },
       {
-        heading: '2. Analytics, Google Tag Manager & Google Consent Mode v2',
+        heading: '2. Google Analytics 4 (gtag.js) & Google Consent Mode v2',
         body: [
-          'TRENDVERSE integrates Google Tag Manager (Container ID: GTM-TXW2Z9KR) across pages and client-side routes, alongside support for Google Analytics 4 (Measurement ID: G-TN4QF7535G) and Google Consent Mode v2.',
-          'Before Google Tag Manager loads tags, our page initializes Google Consent Mode v2 defaults in the document head: analytics_storage, ad_storage, ad_user_data, ad_personalization, and personalization_storage default to "denied" unless you have previously saved consent preferences, while functionality_storage and security_storage remain "granted". When advertising consent is denied, ads_data_redaction is set to true and url_passthrough is set to false.',
-          'We do not claim that zero network activity occurs before consent: loading the Google Tag Manager container script connects your browser to Google servers to enforce Consent Mode rules, and Consent Mode v2 restricts analytics and advertising cookies until you grant permission. When you navigate between routes in our single-page app, sanitized virtual_page_view events strip query parameters and hash fragments so user search inputs or personal details are not forwarded to dataLayer.',
-          'Optional standalone Google Analytics script injection (when configured via environment variables) loads only after you explicitly accept Audience Analytics in the consent banner.',
+          'TRENDVERSE integrates Google Analytics 4 (Measurement ID: G-TN4QF7535G) directly via Google’s official gtag.js library across pages and client-side routes, paired with Google Consent Mode v2.',
+          'Before gtag.js initializes, our page sets Google Consent Mode v2 defaults in the document head: analytics_storage, ad_storage, ad_user_data, ad_personalization, and personalization_storage default to "denied" unless you have previously saved consent preferences, while functionality_storage and security_storage remain "granted". When advertising consent is denied, ads_data_redaction is set to true and url_passthrough is set to false.',
+          'Loading the official gtag.js script connects your browser to Google servers while Consent Mode v2 enforces your privacy settings and restricts analytics cookies until you grant permission. When you navigate between routes or interact with site features, sanitized analytics events strip query parameters, hash fragments, and personal form fields so search text, emails, or user messages are never sent to Google Analytics.',
+          'Updating your selection in the Privacy & Cookie Settings panel immediately calls gtag consent update so Audience Analytics and Advertising storage states stay synchronized with your choice.',
         ],
       },
       {

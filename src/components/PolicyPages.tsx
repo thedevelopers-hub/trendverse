@@ -4,6 +4,7 @@ import { AppRoute, PolicyPageId } from '../types/editorial';
 import { EDITORIAL_WORKFLOW_STEPS, FOUNDER_BRAND_IDENTITY, POLICY_PAGES } from '../data/workflowAndPolicies';
 import { openConsentPreferences } from '../utils/consent';
 import { routeToUrl } from '../utils/routes';
+import { trackFormSubmit } from '../utils/thirdPartyScripts';
 
 interface PolicyPagesProps {
   pageId: PolicyPageId;
@@ -40,6 +41,11 @@ export const PolicyPages: React.FC<PolicyPagesProps> = ({ pageId, onNavigate }) 
     }
     setFormError('');
     setSubmitted(true);
+    trackFormSubmit({
+      formName: 'contact_message',
+      formLocation: 'contact_page',
+      formCategory: subject,
+    });
   };
 
   const composedEmailBody = `Name: ${name.trim()}\nReply Email: ${email.trim()}\nTopic: ${subject}\n\n${message.trim()}`;

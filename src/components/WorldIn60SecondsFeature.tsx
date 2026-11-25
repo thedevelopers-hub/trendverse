@@ -14,6 +14,7 @@ import {
 import { DailyBriefingResponse } from '../../server/types';
 import { AppRoute, EditorialDraft } from '../types/editorial';
 import { routeToUrl } from '../utils/routes';
+import { trackCtaClick } from '../utils/thirdPartyScripts';
 import { formatPublicationTimestamp } from '../utils/timeFormat';
 
 interface WorldIn60SecondsFeatureProps {
@@ -243,6 +244,11 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
               <a
                 href={routeToUrl({ view: 'briefing' })}
                 onClick={(e) => {
+                  trackCtaClick({
+                    ctaName: 'open_60s_page',
+                    ctaLocation: 'world_in_60s',
+                    destination: '/briefing',
+                  });
                   if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
                   e.preventDefault();
                   onNavigate({ view: 'briefing' });
@@ -256,7 +262,10 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
 
             <button
               type="button"
-              onClick={onGenerate}
+              onClick={() => {
+                trackCtaClick({ ctaName: 'generate_60s_briefing', ctaLocation: 'world_in_60s' });
+                onGenerate();
+              }}
               disabled={loading}
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
             >
@@ -421,7 +430,10 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
                   <>
                     <button
                       type="button"
-                      onClick={handlePlay}
+                      onClick={() => {
+                        trackCtaClick({ ctaName: 'play_audio_briefing', ctaLocation: 'world_in_60s' });
+                        handlePlay();
+                      }}
                       disabled={audioStatus === 'playing'}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
                     >

@@ -1,27 +1,25 @@
 import { PrivacyConsentState } from './consent';
 
-export const GTM_CONTAINER_ID = 'GTM-TXW2Z9KR';
+export const GA_MEASUREMENT_ID = 'G-TN4QF7535G';
 
 declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
     adsbygoogle?: unknown[];
-    __trendverseGtmLoaded?: boolean;
   }
 }
 
-let gaLoaded = false;
 let adsenseLoaded = false;
 let lastConsentPushKey = '';
 let initialPageLoadSeen = false;
 let lastTrackedSpaPath = '';
 
-export function isGtmInstalled(): boolean {
+export function isGa4Installed(): boolean {
   if (typeof window === 'undefined' || typeof document === 'undefined') return false;
   return Boolean(
-    window.__trendverseGtmLoaded ||
-      document.querySelector(`script[src*="googletagmanager.com/gtm.js?id=${GTM_CONTAINER_ID}"]`)
+    typeof window.gtag === 'function' &&
+      document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"]`)
   );
 }
 
@@ -30,11 +28,24 @@ function ensureGtagInterface(): void {
   window.dataLayer = window.dataLayer || [];
   if (typeof window.gtag !== 'function') {
     window.gtag = function gtag() {
-      // Push IArguments-style tuple compatible with GTM / gtag.js
       // eslint-disable-next-line prefer-rest-params
       window.dataLayer?.push(arguments);
     };
   }
+}
+
+function sanitizeEventString(value: string, maxLength = 80): string {
+  return value.trim().slice(0, maxLength);
+}
+
+function sanitizePathOrLabel(value?: string): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.startsWith('/')) {
+    return trimmed.split(/[?#]/)[0].slice(0, 120) || '/';
+  }
+  return trimmed.slice(0, 80);
 }
 
 export function getNormalizedAdSenseClientId(): string | null {
@@ -69,7 +80,7 @@ export function syncThirdPartyScriptsWithConsent(consent: PrivacyConsentState): 
 
   ensureGtagInterface();
 
-  // 1. Synchronize Google Consent Mode v2 for GTM (GTM-TXW2Z9KR) & GA4 without PII
+  // 1. Synchronize Google Consent Mode v2 for direct GA4 (G-TN4QF7535G) & AdSense without PII
   const analyticsStatus = consent.analytics ? 'granted' : 'denied';
   const adStatus = consent.advertising ? 'granted' : 'denied';
   const consentKey = `${consent.decided}:${analyticsStatus}:${adStatus}`;
@@ -85,30 +96,9 @@ export function syncThirdPartyScriptsWithConsent(consent: PrivacyConsentState): 
     });
     window.gtag?.('set', 'ads_data_redaction', !consent.advertising);
     window.gtag?.('set', 'url_passthrough', false);
-
-    window.dataLayer?.push({
-      event: 'trendverse_consent_update',
-      gtm_container_id: GTM_CONTAINER_ID,
-      consent_decided: consent.decided,
-      analytics_storage: analyticsStatus,
-      ad_storage: adStatus,
-    });
   }
 
-  // 2. Optional standalone Google Analytics 4 (only when valid Measurement ID is configured AND analytics consent granted)
-  const gaId = (import.meta.env?.VITE_GA_MEASUREMENT_ID || '').trim();
-  if (consent.analytics && /^G-[A-Z0-9]+$/i.test(gaId) && !gaLoaded && !document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}"]`)) {
-    gaLoaded = true;
-    window.gtag?.('js', new Date());
-    window.gtag?.('config', gaId, { anonymize_ip: true, send_page_view: true });
-
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`;
-    document.head.appendChild(script);
-  }
-
-  // 3. Google AdSense (only loaded when explicitly enabled, valid client ID set, AND advertising consent granted)
+  // 2. Google AdSense (only loaded when explicitly enabled, valid client ID set, AND advertising consent granted)
   const adsClient = getNormalizedAdSenseClientId();
   if (
     isAdSenseActive() &&
@@ -128,31 +118,69 @@ export function syncThirdPartyScriptsWithConsent(consent: PrivacyConsentState): 
 }
 
 /**
- * Push a sanitized virtual pageview to GTM dataLayer on SPA client-side route transitions.
- * Strips query parameters and hash fragments so user search text or PII is never transmitted.
- * Skips the initial document mount so GTM's native Container Loaded pageview is not duplicated.
+ * Send deduplicated GA4 page_view and SPA page_navigation events via gtag.js.
+ * Strips query parameters and hash fragments so search inputs or PII are never transmitted.
+ * Deduplicates by cleanPath so React StrictMode double-mounts or data refreshes never double-count.
  */
 export function trackSpaPageView(routeView: string): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const cleanPath = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
 
-  if (!initialPageLoadSeen) {
-    initialPageLoadSeen = true;
-    lastTrackedSpaPath = cleanPath;
+  if (initialPageLoadSeen && cleanPath === lastTrackedSpaPath) {
     return;
   }
 
-  if (cleanPath === lastTrackedSpaPath) return;
+  const previousPath = lastTrackedSpaPath;
+  const isSpaNavigation = initialPageLoadSeen && previousPath !== '' && previousPath !== cleanPath;
+
+  initialPageLoadSeen = true;
   lastTrackedSpaPath = cleanPath;
 
   ensureGtagInterface();
-  window.dataLayer?.push({
-    event: 'virtual_page_view',
-    gtm_container_id: GTM_CONTAINER_ID,
+
+  window.gtag?.('event', 'page_view', {
+    page_title: document.title,
     page_path: cleanPath,
     page_location: `${window.location.origin}${cleanPath}`,
-    page_title: document.title,
-    route_view: routeView,
+    route_view: sanitizeEventString(routeView, 40),
+  });
+
+  if (isSpaNavigation) {
+    window.gtag?.('event', 'page_navigation', {
+      from_path: previousPath,
+      to_path: cleanPath,
+      route_view: sanitizeEventString(routeView, 40),
+      navigation_type: 'spa',
+    });
+  }
+}
+
+export function trackCtaClick(params: {
+  ctaName: string;
+  ctaLocation: string;
+  destination?: string;
+}): void {
+  if (typeof window === 'undefined') return;
+  ensureGtagInterface();
+  const cleanDest = sanitizePathOrLabel(params.destination);
+  window.gtag?.('event', 'cta_click', {
+    cta_name: sanitizeEventString(params.ctaName, 60),
+    cta_location: sanitizeEventString(params.ctaLocation, 60),
+    ...(cleanDest ? { link_destination: cleanDest } : {}),
   });
 }
 
+export function trackFormSubmit(params: {
+  formName: string;
+  formLocation: string;
+  formCategory?: string;
+}): void {
+  if (typeof window === 'undefined') return;
+  ensureGtagInterface();
+  const cleanCat = params.formCategory ? sanitizeEventString(params.formCategory, 60) : undefined;
+  window.gtag?.('event', 'form_submit', {
+    form_name: sanitizeEventString(params.formName, 60),
+    form_location: sanitizeEventString(params.formLocation, 60),
+    ...(cleanCat ? { form_category: cleanCat } : {}),
+  });
+}

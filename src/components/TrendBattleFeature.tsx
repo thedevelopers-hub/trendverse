@@ -7,6 +7,7 @@ import {
 } from '../../server/types';
 import { AppRoute } from '../types/editorial';
 import { routeToUrl } from '../utils/routes';
+import { trackCtaClick, trackFormSubmit } from '../utils/thirdPartyScripts';
 import { fetchTrendBattle } from '../services/newsroomApi';
 import { formatPublicationTimestamp } from '../utils/timeFormat';
 
@@ -101,10 +102,18 @@ export const TrendBattleFeature: React.FC<TrendBattleFeatureProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (topicA.trim() && topicB.trim()) {
+      trackFormSubmit({
+        formName: 'trend_battle_compare',
+        formLocation: 'trend_battle',
+        formCategory: `${geo}:${range}`,
+      });
+    }
     void runComparison(topicA, topicB, geo, range, true);
   };
 
   const handleShare = async () => {
+    trackCtaClick({ ctaName: 'share_trend_battle', ctaLocation: 'trend_battle' });
     const shareUrl = `${window.location.origin}/trend-battle`;
     const summaryText = result
       ? `TRENDVERSE Trend Battle (${result.geoName}, ${result.range}): ${result.topicA.inputTopic} (Avg ${result.topicA.averageScore}/100) vs ${result.topicB.inputTopic} (Avg ${result.topicB.averageScore}/100) — ${shareUrl}`
@@ -190,6 +199,11 @@ export const TrendBattleFeature: React.FC<TrendBattleFeatureProps> = ({
               <a
                 href={routeToUrl({ view: 'trend-battle' })}
                 onClick={(e) => {
+                  trackCtaClick({
+                    ctaName: 'open_trend_battle_page',
+                    ctaLocation: 'trend_battle',
+                    destination: '/trend-battle',
+                  });
                   if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
                   e.preventDefault();
                   onNavigate({ view: 'trend-battle' });
