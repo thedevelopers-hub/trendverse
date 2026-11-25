@@ -66,20 +66,8 @@ export const EDITORIAL_WORKFLOW_STEPS: EditorialWorkflowStep[] = [
   },
 ];
 
-export const FOUNDER_BRAND_IDENTITY = {
-  brandName: 'TRENDVERSE',
-  tagline: "Discover What's Next.",
-  founderName: 'Vicky',
-  developerName: 'Vicky',
-  publisherName: 'TRENDVERSE Editorial Team',
-  contactEmail: 'ui.vicky2002@gmail.com',
-  whatsappDisplay: '+91 63876 61594',
-  whatsappUrl: 'https://wa.me/916387661594',
-  aboutIntro:
-    'TRENDVERSE is an independent global digital platform founded and developed by Vicky.\n\nOur mission is to make global news, emerging trends, artificial intelligence, technology, career opportunities and educational resources accessible to people around the world.',
-  platformNote:
-    'Built with React, TypeScript, Vercel Serverless infrastructure, Google Blogger compatibility, and curated public institutional feeds.',
-};
+import { FOUNDER_BRAND_IDENTITY } from './brandIdentity';
+export { FOUNDER_BRAND_IDENTITY };
 
 export interface PolicyContent {
   id: PolicyPageId;

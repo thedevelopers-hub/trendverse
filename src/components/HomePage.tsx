@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { lazy, useMemo, useState } from 'react';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -27,14 +27,32 @@ import { EditorialVisual } from './EditorialVisual';
 import { AdSlot } from './AdSlot';
 import { LiveWorldClock } from './LiveWorldClock';
 import { BreakingTicker } from './BreakingTicker';
-import { TrendsRadar } from './TrendsRadar';
-import { NewsCenterSection } from './NewsCenterSection';
-import { AIIntelligenceCenter } from './AIIntelligenceCenter';
-import { GlobalNewsMap } from './GlobalNewsMap';
-import { WorldIn60SecondsFeature } from './WorldIn60SecondsFeature';
-import { TrendBattleFeature } from './TrendBattleFeature';
-import { WhatsNewFeature } from './WhatsNewFeature';
-import { CareersHomeHighlight } from './CareersHomeHighlight';
+import { DeferredSection } from './DeferredSection';
+
+const WhatsNewFeature = lazy(() =>
+  import('./WhatsNewFeature').then((m) => ({ default: m.WhatsNewFeature }))
+);
+const WorldIn60SecondsFeature = lazy(() =>
+  import('./WorldIn60SecondsFeature').then((m) => ({ default: m.WorldIn60SecondsFeature }))
+);
+const TrendBattleFeature = lazy(() =>
+  import('./TrendBattleFeature').then((m) => ({ default: m.TrendBattleFeature }))
+);
+const TrendsRadar = lazy(() =>
+  import('./TrendsRadar').then((m) => ({ default: m.TrendsRadar }))
+);
+const NewsCenterSection = lazy(() =>
+  import('./NewsCenterSection').then((m) => ({ default: m.NewsCenterSection }))
+);
+const AIIntelligenceCenter = lazy(() =>
+  import('./AIIntelligenceCenter').then((m) => ({ default: m.AIIntelligenceCenter }))
+);
+const GlobalNewsMap = lazy(() =>
+  import('./GlobalNewsMap').then((m) => ({ default: m.GlobalNewsMap }))
+);
+const CareersHomeHighlight = lazy(() =>
+  import('./CareersHomeHighlight').then((m) => ({ default: m.CareersHomeHighlight }))
+);
 
 interface HomePageProps {
   articles: Article[];
@@ -341,31 +359,43 @@ export const HomePage: React.FC<HomePageProps> = ({
                       {newsData?.status ? newsData.status.toUpperCase() : 'SYNC'}
                     </span>
                   </div>
-                  {topLiveDispatches.length === 0 ? (
-                    <p className="text-xs text-slate-400">
-                      {newsLoading ? 'Fetching live RSS feeds...' : 'No live items cached.'}
-                    </p>
-                  ) : (
-                    <div className="divide-y divide-white/10">
-                      {topLiveDispatches.map((item) => (
-                        <a
-                          key={item.id}
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block py-2.5 first:pt-0 last:pb-0 group"
-                        >
-                          <div className="text-[11px] text-slate-400">
-                            <span className="text-blue-400 font-medium">{item.publisher}</span> ·{' '}
-                            {formatRelativeTime(item.publishedAt)}
-                          </div>
-                          <div className="mt-1 text-xs font-medium text-slate-100 group-hover:text-blue-300 line-clamp-2 leading-snug">
-                            {item.title}
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                  <div className="min-h-[244px]">
+                    {topLiveDispatches.length === 0 ? (
+                      newsLoading ? (
+                        <div className="divide-y divide-white/10" aria-label="Loading live news dispatches">
+                          {[0, 1, 2, 3].map((idx) => (
+                            <div key={idx} className="py-2.5 first:pt-0 last:pb-0 space-y-1.5">
+                              <div className="h-3 w-28 rounded bg-white/10" />
+                              <div className="h-4 w-full rounded bg-white/10" />
+                              <div className="h-4 w-3/4 rounded bg-white/10" />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-300">No live items cached.</p>
+                      )
+                    ) : (
+                      <div className="divide-y divide-white/10">
+                        {topLiveDispatches.map((item) => (
+                          <a
+                            key={item.id}
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block py-2.5 first:pt-0 last:pb-0 group"
+                          >
+                            <div className="text-[11px] text-slate-300">
+                              <span className="text-blue-400 font-medium">{item.publisher}</span> ·{' '}
+                              {formatRelativeTime(item.publishedAt)}
+                            </div>
+                            <div className="mt-1 text-xs font-medium text-slate-100 group-hover:text-blue-300 line-clamp-2 leading-snug">
+                              {item.title}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <a
                   href={routeToUrl({ view: 'news-center' })}
@@ -389,65 +419,122 @@ export const HomePage: React.FC<HomePageProps> = ({
       )}
 
       {/* FEATURE 3 (Homepage Section): What's New Since Your Last Visit */}
-      <WhatsNewFeature
-        mode="section"
-        visitorState={visitorState}
-        liveNews={newsData?.items ?? []}
-        articles={articles}
-        trends={trendsData?.trends ?? []}
-        useUtc={useUtc}
-        onMarkRead={onMarkRead}
-        onToggleSave={onToggleSave}
-        onClearLocalHistory={onClearLocalHistory}
-        onUpdateVisitCheckpoint={onUpdateVisitCheckpoint}
+      <DeferredSection
+        id="whats-new-section"
+        eyebrow="Personal Reader Digest"
+        title="What's New Since Your Last Visit"
+        description="Track newly arrived dispatches, bookmarks, and private browser-local reading history."
+        actionLabel="Open Full Digest"
+        actionRoute={{ view: 'whats-new' }}
+        minHeightClass="min-h-[420px]"
         onNavigate={onNavigate}
-      />
+      >
+        <WhatsNewFeature
+          mode="section"
+          visitorState={visitorState}
+          liveNews={newsData?.items ?? []}
+          articles={articles}
+          trends={trendsData?.trends ?? []}
+          useUtc={useUtc}
+          onMarkRead={onMarkRead}
+          onToggleSave={onToggleSave}
+          onClearLocalHistory={onClearLocalHistory}
+          onUpdateVisitCheckpoint={onUpdateVisitCheckpoint}
+          onNavigate={onNavigate}
+        />
+      </DeferredSection>
 
       {/* FEATURE 1 (Homepage Section): Your World in 60 Seconds */}
-      <WorldIn60SecondsFeature
-        mode="section"
-        briefing={briefingData}
-        history={briefingHistory}
-        loading={briefingLoading}
-        useUtc={useUtc}
-        countryPref={briefingCountryPref}
-        categoryPref={briefingCategoryPref}
-        countPref={briefingCountPref}
-        onChangeCountry={onChangeBriefingCountry}
-        onChangeCategory={onChangeBriefingCategory}
-        onChangeCount={onChangeBriefingCount}
-        onGenerate={onGenerateBriefing}
-        onSelectHistoryItem={onSelectBriefingHistory}
-        onClearHistory={onClearBriefingHistory}
-        onSaveDraft={onSaveDraft}
-        savedDraftUrls={savedDraftUrls}
+      <DeferredSection
+        id="world-in-60-seconds"
+        eyebrow="Your World in 60 Seconds"
+        title="Daily Global News Briefing & Audio Digest"
+        description="5 to 10 verified developments synthesized strictly from live RSS feeds with source links and browser audio playback."
+        actionLabel="Open Briefing Page"
+        actionRoute={{ view: 'briefing' }}
+        dark
+        minHeightClass="min-h-[420px]"
         onNavigate={onNavigate}
-      />
+      >
+        <WorldIn60SecondsFeature
+          mode="section"
+          briefing={briefingData}
+          history={briefingHistory}
+          loading={briefingLoading}
+          useUtc={useUtc}
+          countryPref={briefingCountryPref}
+          categoryPref={briefingCategoryPref}
+          countPref={briefingCountPref}
+          onChangeCountry={onChangeBriefingCountry}
+          onChangeCategory={onChangeBriefingCategory}
+          onChangeCount={onChangeBriefingCount}
+          onGenerate={onGenerateBriefing}
+          onSelectHistoryItem={onSelectBriefingHistory}
+          onClearHistory={onClearBriefingHistory}
+          onSaveDraft={onSaveDraft}
+          savedDraftUrls={savedDraftUrls}
+          onNavigate={onNavigate}
+        />
+      </DeferredSection>
 
       {/* FEATURE 2 (Homepage Section): Trend Battle */}
-      <TrendBattleFeature mode="section" useUtc={useUtc} onNavigate={onNavigate} />
+      <DeferredSection
+        id="trend-battle"
+        eyebrow="Trend Battle"
+        title="Compare Relative Topic Interest"
+        description="Compare public attention trajectories, peak interest dates, and related queries across topics."
+        actionLabel="Open Trend Battle Page"
+        actionRoute={{ view: 'trend-battle' }}
+        minHeightClass="min-h-[460px]"
+        onNavigate={onNavigate}
+      >
+        <TrendBattleFeature mode="section" useUtc={useUtc} onNavigate={onNavigate} />
+      </DeferredSection>
 
       {/* 5. Global Trend Radar */}
-      <TrendsRadar
-        data={trendsData}
-        selectedGeo={selectedTrendGeo}
-        loading={trendsLoading}
-        useUtc={useUtc}
-        onSelectGeo={onSelectTrendGeo}
-        onRefresh={onRefreshTrends}
-      />
+      <DeferredSection
+        id="trends-radar"
+        eyebrow="Global Trend Radar"
+        title="Real-Time Search Momentum"
+        description="Live regional search signals sourced directly from Google Trends official public RSS feeds."
+        actionLabel="Explore News & Trends"
+        actionRoute={{ view: 'news-center' }}
+        dark
+        minHeightClass="min-h-[460px]"
+        onNavigate={onNavigate}
+      >
+        <TrendsRadar
+          data={trendsData}
+          selectedGeo={selectedTrendGeo}
+          loading={trendsLoading}
+          useUtc={useUtc}
+          onSelectGeo={onSelectTrendGeo}
+          onRefresh={onRefreshTrends}
+        />
+      </DeferredSection>
 
       {/* 6. Live Global News Center (All 10 Categories) */}
-      <NewsCenterSection
-        data={newsData}
-        loading={newsLoading}
-        error={newsError}
-        useUtc={useUtc}
-        autoRefreshMinutes={autoRefreshMinutes}
-        onChangeAutoRefresh={onChangeAutoRefresh}
-        onManualRefresh={onRefreshNews}
-        compactMode
-      />
+      <DeferredSection
+        id="live-news-center"
+        eyebrow="Live Global News Center"
+        title="Verified International Feeds"
+        description="Reported external dispatches with original publisher attribution and timestamps across ten desks."
+        actionLabel="Open Full News Center"
+        actionRoute={{ view: 'news-center' }}
+        minHeightClass="min-h-[520px]"
+        onNavigate={onNavigate}
+      >
+        <NewsCenterSection
+          data={newsData}
+          loading={newsLoading}
+          error={newsError}
+          useUtc={useUtc}
+          autoRefreshMinutes={autoRefreshMinutes}
+          onChangeAutoRefresh={onChangeAutoRefresh}
+          onManualRefresh={onRefreshNews}
+          compactMode
+        />
+      </DeferredSection>
 
       {/* Reserved Leaderboard AdSense Container */}
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 pb-8">
@@ -485,7 +572,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     {desk.label}
                   </h3>
                   {deskStories.length === 0 ? (
-                    <p className="text-xs text-slate-500 py-3">
+                    <p className="text-xs text-slate-600 py-3">
                       Awaiting verified dispatches for {desk.label}.
                     </p>
                   ) : (
@@ -498,13 +585,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                           rel="noopener noreferrer"
                           className="group block py-2.5 first:pt-0 last:pb-0"
                         >
-                          <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                          <div className="flex items-center justify-between text-[11px] text-slate-600 mb-1">
                             <span className="font-semibold text-blue-600">{story.publisher}</span>
                             <span>{formatPublicationTimestamp(story.publishedAt, useUtc)}</span>
                           </div>
                           <div className="text-sm font-medium text-slate-900 group-hover:text-blue-600 leading-snug line-clamp-2 flex items-start justify-between gap-2">
                             <span>{story.title}</span>
-                            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" aria-hidden="true" />
+                            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-500 mt-0.5" aria-hidden="true" />
                           </div>
                         </a>
                       ))}
@@ -518,15 +605,37 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* 9. AI Intelligence Center */}
-      <AIIntelligenceCenter
-        newsItems={newsData?.items ?? []}
-        articles={articles}
-        useUtc={useUtc}
+      <DeferredSection
+        id="ai-intelligence-center"
+        eyebrow="AI Intelligence Center"
+        title="AI News, Verified Tools & Model Reference"
+        description="Live official AI research dispatches, verified tool directory, and model documentation links."
+        actionLabel="Open AI Center"
+        actionRoute={{ view: 'ai-center' }}
+        minHeightClass="min-h-[440px]"
         onNavigate={onNavigate}
-      />
+      >
+        <AIIntelligenceCenter
+          newsItems={newsData?.items ?? []}
+          articles={articles}
+          useUtc={useUtc}
+          onNavigate={onNavigate}
+        />
+      </DeferredSection>
 
       {/* 13. Global News Map */}
-      <GlobalNewsMap items={newsData?.items ?? []} useUtc={useUtc} />
+      <DeferredSection
+        id="global-news-map"
+        eyebrow="Global News Map"
+        title="Explore Dispatches by Country & Region"
+        description="Interactive regional dispatch map using verified publisher region tags and country centroids."
+        actionLabel="Browse News Desks"
+        actionRoute={{ view: 'news-center' }}
+        minHeightClass="min-h-[440px]"
+        onNavigate={onNavigate}
+      >
+        <GlobalNewsMap items={newsData?.items ?? []} useUtc={useUtc} />
+      </DeferredSection>
 
       {/* 15 & 16. Editorial Archives + Most Read & Editor's Picks */}
       <section className="bg-slate-50 border-y border-slate-200 py-14">
@@ -598,7 +707,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       0{idx + 1}
                     </span>
                     <div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-slate-600">
                         {item.categoryName} <span aria-hidden="true">·</span> {item.readTimeMinutes} min
                       </div>
                       <div className="mt-1 text-sm font-semibold text-slate-900 leading-snug">
@@ -613,9 +722,20 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      {/* 17. Free Online Tools */}
       {/* 16b. TRENDVERSE CAREERS 1.0 Portal Highlight */}
-      <CareersHomeHighlight onNavigate={onNavigate} />
+      <DeferredSection
+        id="trendverse-careers-highlight"
+        eyebrow="TRENDVERSE CAREERS 1.0 · Free Public Opportunity Portal"
+        title="Discover Opportunities. Build Your Future."
+        description="Explore verified jobs, student internships, international scholarships, and official government portals."
+        actionLabel="Open Careers Portal"
+        actionRoute={{ view: 'careers', tab: 'overview' }}
+        dark
+        minHeightClass="min-h-[360px]"
+        onNavigate={onNavigate}
+      >
+        <CareersHomeHighlight onNavigate={onNavigate} />
+      </DeferredSection>
 
       <section className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between border-b border-slate-200 pb-4 mb-8">
@@ -706,7 +826,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+                      className="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-300 focus:border-blue-400 focus:outline-none"
                     />
                     <button
                       type="submit"
@@ -720,7 +840,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       {newsletterError}
                     </p>
                   )}
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-300">
                     Read our{' '}
                     <a
                       href={routeToUrl({ view: 'policy', pageId: 'privacy-policy' })}

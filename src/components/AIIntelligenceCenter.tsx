@@ -125,7 +125,7 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
                     className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 hover:border-blue-500 transition-colors"
                   >
                     <div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                      <div className="flex items-center gap-2 text-xs text-slate-600 mb-2">
                         <span className="font-semibold text-blue-600">{item.publisher}</span>
                         <span aria-hidden="true">·</span>
                         <span>{item.category}</span>
@@ -137,7 +137,7 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
                       </h3>
                       <p className="mt-2 text-sm text-slate-600 line-clamp-3">{item.summary}</p>
                     </div>
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
                       <time dateTime={item.publishedAt}>
                         {formatPublicationTimestamp(item.publishedAt, useUtc)}
                       </time>
@@ -145,6 +145,7 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`Read AI source dispatch: ${item.title}`}
                         className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700"
                       >
                         <span>Source</span>
@@ -196,7 +197,7 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
                   className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5"
                 >
                   <div>
-                    <div className="text-xs text-slate-500 mb-1.5">
+                    <div className="text-xs text-slate-600 mb-1.5">
                       <span className="font-semibold text-blue-600">{tool.category}</span>
                       <span aria-hidden="true"> · </span>
                       <span>{tool.provider}</span>
@@ -205,11 +206,12 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
                     <p className="mt-2 text-xs leading-relaxed text-slate-600">{tool.summary}</p>
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Verified: {tool.lastVerified}</span>
+                    <span className="text-slate-600">Verified: {tool.lastVerified}</span>
                     <a
                       href={tool.officialUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label={`Visit official site for ${tool.name}`}
                       className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
                     >
                       <span>Official Site</span>
@@ -249,6 +251,7 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
                         href={row.officialUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`Read official documentation for ${row.modelName}`}
                         className="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline"
                       >
                         <span>Docs</span>
@@ -260,13 +263,14 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
                         href={row.pricingUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`View official pricing for ${row.modelName}`}
                         className="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline"
                       >
                         <span>Official Pricing</span>
                         <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                       </a>
                     </td>
-                    <td className="px-4 py-3.5 font-mono-tabular text-xs text-slate-500 whitespace-nowrap">
+                    <td className="px-4 py-3.5 font-mono-tabular text-xs text-slate-600 whitespace-nowrap">
                       {row.lastVerified}
                     </td>
                   </tr>
@@ -310,6 +314,7 @@ export const AIIntelligenceCenter: React.FC<AIIntelligenceCenterProps> = ({
                   <div className="mt-4 pt-3 border-t border-slate-100">
                     <a
                       href={artUrl}
+                      aria-label={`Read technical guide: ${art.title}`}
                       onClick={(e) => {
                         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
                         e.preventDefault();

@@ -199,7 +199,7 @@ export const GlobalNewsMap: React.FC<GlobalNewsMapProps> = ({ items, useUtc }) =
           </div>
 
           {countryStories.length === 0 ? (
-            <p className="text-sm text-slate-500 py-4">
+            <p className="text-sm text-slate-600 py-4">
               No recent dispatches in the active RSS cache explicitly tagged for {selectedCountry}.
               Select India, United Kingdom, United States, or Global to inspect live feed items.
             </p>
@@ -207,7 +207,7 @@ export const GlobalNewsMap: React.FC<GlobalNewsMapProps> = ({ items, useUtc }) =
             <div className="divide-y divide-slate-100">
               {countryStories.map((story) => (
                 <div key={story.id} className="py-3.5 first:pt-0 last:pb-0">
-                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                  <div className="flex items-center gap-2 text-xs text-slate-600 mb-1">
                     <span className="font-semibold text-blue-600">{story.publisher}</span>
                     <span aria-hidden="true">·</span>
                     <time dateTime={story.publishedAt}>

@@ -219,7 +219,7 @@ export const TrendBattleFeature: React.FC<TrendBattleFeatureProps> = ({
 
         {/* Preset Battles */}
         <div className="mb-5 flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-slate-500 font-medium">Examples:</span>
+          <span className="text-slate-600 font-medium">Examples:</span>
           {BATTLE_PRESETS.map((preset) => (
             <button
               key={preset.label}
@@ -368,7 +368,7 @@ export const TrendBattleFeature: React.FC<TrendBattleFeatureProps> = ({
                       className="rounded-xl border border-slate-200 bg-white p-4 flex items-center justify-between gap-4"
                     >
                       <div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                        <div className="flex items-center gap-2 text-xs text-slate-600 mb-1">
                           <span className={`inline-block h-2.5 w-2.5 rounded-sm ${side.accent}`} />
                           <span>{side.label}</span>
                           {side.data.resolvedEntity && (
@@ -399,12 +399,12 @@ export const TrendBattleFeature: React.FC<TrendBattleFeatureProps> = ({
                       </div>
 
                       <div className="text-right shrink-0">
-                        <div className="text-[11px] text-slate-500">Avg Relative Index</div>
+                        <div className="text-[11px] text-slate-600">Avg Relative Index</div>
                         <div className={`font-mono-tabular text-2xl font-bold ${side.textAccent}`}>
                           {side.data.available ? `${side.data.averageScore}/100` : 'N/A'}
                         </div>
                         {side.data.peakDate && (
-                          <div className="text-[11px] text-slate-500 font-mono-tabular">
+                          <div className="text-[11px] text-slate-600 font-mono-tabular">
                             Peak {side.data.peakScore} on {side.data.peakDate}
                           </div>
                         )}

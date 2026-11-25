@@ -381,7 +381,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                         className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-800 hover:border-blue-500"
                       >
                         <span>
-                          {tool.name} <span className="text-slate-400">· {tool.category}</span>
+                          {tool.name} <span className="text-slate-600">· {tool.category}</span>
                         </span>
                         <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                       </a>

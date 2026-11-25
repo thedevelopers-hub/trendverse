@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ExternalLink, FileCheck2, Link2, Share2 } from 'lucide-react';
 import { AppRoute, Article } from '../types/editorial';
+import { EVERGREEN_ARTICLES, getArticleBySlug } from '../data/articles';
 import { getAuthorProfile } from '../data/authors';
 import { routeToUrl } from '../utils/routes';
+import { applySeoForArticle } from '../utils/seo';
 import { trackCtaClick } from '../utils/thirdPartyScripts';
 import { EditorialVisual } from './EditorialVisual';
 import { AdSlot } from './AdSlot';
@@ -13,7 +15,22 @@ interface ArticlePageProps {
   onNavigate: (route: AppRoute) => void;
 }
 
-export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, onNavigate }) => {
+export const ArticlePage: React.FC<ArticlePageProps> = ({
+  article: inputArticle,
+  allArticles,
+  onNavigate,
+}) => {
+  const article = useMemo(() => {
+    if (inputArticle.sections.length === 0 && !inputArticle.isLiveBloggerPost) {
+      return getArticleBySlug(inputArticle.slug, EVERGREEN_ARTICLES) || inputArticle;
+    }
+    return inputArticle;
+  }, [inputArticle]);
+
+  useEffect(() => {
+    applySeoForArticle(article);
+  }, [article]);
+
   const [copied, setCopied] = useState(false);
   const authorProfile = getAuthorProfile(article.authorId);
 

@@ -39,7 +39,7 @@ export const BreakingTicker: React.FC<BreakingTickerProps> = ({
 
   return (
     <div className="bg-[#0b1324] border-b border-white/10 text-white">
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-2.5 min-h-[70px] sm:min-h-[44px] flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-blue-400 whitespace-nowrap shrink-0">
             <Radio className="h-3.5 w-3.5" aria-hidden="true" />
@@ -47,7 +47,7 @@ export const BreakingTicker: React.FC<BreakingTickerProps> = ({
           </span>
 
           {loading && tickerItems.length === 0 ? (
-            <span className="text-xs text-slate-400">Synchronizing live newsroom feeds...</span>
+            <span className="text-xs text-slate-300 truncate">Synchronizing live newsroom feeds...</span>
           ) : currentItem ? (
             <a
               href={currentItem.url}
@@ -56,7 +56,7 @@ export const BreakingTicker: React.FC<BreakingTickerProps> = ({
               className="group flex items-center gap-2 min-w-0 text-xs sm:text-sm text-slate-100 hover:text-blue-300 transition-colors"
             >
               <span className="truncate font-medium">{currentItem.title}</span>
-              <span className="text-xs text-slate-400 whitespace-nowrap shrink-0 hidden md:inline">
+              <span className="text-xs text-slate-300 whitespace-nowrap shrink-0 hidden md:inline">
                 {currentItem.publisher} · {formatRelativeTime(currentItem.publishedAt)}
               </span>
               <ArrowUpRight className="h-3.5 w-3.5 text-blue-400 shrink-0" aria-hidden="true" />
@@ -107,7 +107,7 @@ export const BreakingTicker: React.FC<BreakingTickerProps> = ({
                 >
                   Prev
                 </button>
-                <span className="font-mono-tabular text-[11px] text-slate-400">
+                <span className="font-mono-tabular text-[11px] text-slate-300">
                   {(activeIndex % tickerItems.length) + 1}/{tickerItems.length}
                 </span>
                 <button

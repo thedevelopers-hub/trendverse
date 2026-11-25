@@ -576,6 +576,7 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
                             href={article.url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            aria-label={`${article.publisher}: ${article.title}`}
                             className="inline-flex items-center gap-1 font-medium text-blue-400 hover:underline"
                           >
                             <span>{article.publisher}</span>
@@ -786,6 +787,7 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
                         href={story.sourceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`${story.sourceName}: ${story.headline}`}
                         className="inline-flex items-center gap-1 font-medium text-blue-400 hover:underline"
                       >
                         <span>{story.sourceName}</span>

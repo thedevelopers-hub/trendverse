@@ -81,7 +81,7 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 text-xs">
-          <div className="text-slate-500">
+          <div className="text-slate-600">
             {data?.lastSuccessfulRefresh ? (
               <span>
                 Last refresh: {formatPublicationTimestamp(data.lastSuccessfulRefresh, useUtc)}
@@ -178,7 +178,7 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
                     {src.status.toUpperCase()}
                   </span>
                 </div>
-                <div className="mt-1 text-slate-500">
+                <div className="mt-1 text-slate-600">
                   {src.category} · {src.itemCount} items
                 </div>
                 {src.errorMessage && (
@@ -236,7 +236,7 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
               ? 'No verified stories published within the last 6 hours qualify as Breaking Developments.'
               : `No live headlines currently available under ${selectedCat}.`}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-600">
             Switch to All feeds or click Refresh to query upstream RSS publishers again.
           </p>
         </div>
@@ -271,7 +271,7 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
                   )}
 
                   <div className="p-5">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mb-2">
                       <span className="font-semibold text-blue-600">{item.publisher}</span>
                       <span aria-hidden="true">·</span>
                       <span>{item.category}</span>
@@ -295,12 +295,12 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
                   </div>
                 </div>
 
-                <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-500">
+                <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-600">
                   <div>
                     <time dateTime={item.publishedAt}>
                       {formatPublicationTimestamp(item.publishedAt, useUtc)}
                     </time>
-                    <span className="ml-1.5 text-slate-400">
+                    <span className="ml-1.5 text-slate-600">
                       ({formatRelativeTime(item.publishedAt)})
                     </span>
                   </div>
@@ -308,6 +308,7 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={`Read full dispatch: ${item.title} (${item.publisher})`}
                     className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700 shrink-0"
                   >
                     <span>Read</span>

@@ -329,12 +329,12 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
                       key={item.id}
                       className={`rounded-xl border p-4 flex flex-col justify-between transition-colors ${
                         isRead
-                          ? 'border-slate-200 bg-slate-100/70 opacity-85'
+                          ? 'border-slate-200 bg-slate-50'
                           : 'border-slate-200 bg-white'
                       }`}
                     >
                       <div>
-                        <div className="flex items-center justify-between gap-2 text-xs text-slate-500 mb-1.5">
+                        <div className="flex items-center justify-between gap-2 text-xs text-slate-600 mb-1.5">
                           <span>
                             <strong className="text-blue-600">{item.publisher}</strong> ·{' '}
                             {item.category}
@@ -402,6 +402,7 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => onMarkRead(item)}
+                            aria-label={`Open full story: ${item.title}`}
                             className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
                           >
                             <span>Open</span>
@@ -443,7 +444,7 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-3">
                   Recently Updated Explainers
                 </h3>
                 <ul className="space-y-2 text-xs">
@@ -456,7 +457,7 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
                       >
                         {a.title}
                       </button>
-                      <span className="font-mono-tabular text-slate-400 shrink-0">
+                      <span className="font-mono-tabular text-slate-600 shrink-0">
                         {a.updatedAt}
                       </span>
                     </li>
@@ -523,6 +524,7 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
                           href={saved.url}
                           target="_blank"
                           rel="noopener noreferrer"
+                          aria-label={`Open source article: ${saved.title}`}
                           className="font-semibold text-blue-600 hover:underline"
                         >
                           Open Source →
@@ -548,12 +550,12 @@ export const WhatsNewFeature: React.FC<WhatsNewFeatureProps> = ({
                 {visitorState.readingHistory.map((h) => (
                   <div key={`${h.id}-${h.readAt}`} className="p-4 flex items-center justify-between gap-4 text-xs">
                     <div>
-                      <div className="text-slate-500">
+                      <div className="text-slate-600">
                         {h.publisher} · {h.category}
                       </div>
                       <div className="text-sm font-semibold text-slate-900 mt-0.5">{h.title}</div>
                     </div>
-                    <span className="text-slate-400 whitespace-nowrap">
+                    <span className="text-slate-600 whitespace-nowrap">
                       Read {formatPublicationTimestamp(h.readAt, useUtc)}
                     </span>
                   </div>

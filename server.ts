@@ -64,6 +64,23 @@ async function startServer() {
     res.status(200).send(generateAdsTxt(process.env));
   });
 
+  app.get('/llms.txt', (_req, res) => {
+    const filePath = path.resolve(__dirname, 'public', 'llms.txt');
+    if (!fs.existsSync(filePath)) return res.status(404).end('Not found');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.status(200).send(fs.readFileSync(filePath, 'utf-8'));
+  });
+
+  app.get('/.well-known/ard.json', (_req, res) => {
+    const filePath = path.resolve(__dirname, 'public', '.well-known', 'ard.json');
+    if (!fs.existsSync(filePath)) return res.status(404).end('Not found');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return res.status(200).send(fs.readFileSync(filePath, 'utf-8'));
+  });
+
   // Vite Middleware in Development / Prerendered Dist in Production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -78,6 +95,8 @@ async function startServer() {
         urlPath.startsWith('/@') ||
         urlPath.startsWith('/src/') ||
         urlPath.startsWith('/node_modules/') ||
+        urlPath.startsWith('/.well-known/') ||
+        urlPath === '/llms.txt' ||
         /\.[a-z0-9]{2,8}$/i.test(urlPath);
       if (isAssetOrApi) return next();
 

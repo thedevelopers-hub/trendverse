@@ -1,0 +1,42 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "TRENDVERSE",
+    "identifier": "did:web:trendverse-ten.vercel.app"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:trendverse-ten.vercel.app:feed:live-news",
+      "displayName": "TRENDVERSE Live Global News Wire",
+      "type": "application/json",
+      "url": "https://trendverse-ten.vercel.app/api/news",
+      "description": "Verified real-time international RSS news dispatches with original publisher attribution and publication timestamps.",
+      "representativeQueries": [
+        "Get the latest verified international news headlines",
+        "Show recent India and technology news dispatches"
+      ]
+    },
+    {
+      "identifier": "urn:air:trendverse-ten.vercel.app:feed:google-trends",
+      "displayName": "TRENDVERSE Global Trends Radar",
+      "type": "application/json",
+      "url": "https://trendverse-ten.vercel.app/api/trends",
+      "description": "Regional search momentum and breakout topics sourced from Google Trends official public RSS feeds.",
+      "representativeQueries": [
+        "What topics are currently trending on Google Trends",
+        "Show live search trends in India and the United States"
+      ]
+    },
+    {
+      "identifier": "urn:air:trendverse-ten.vercel.app:catalog:llms-txt",
+      "displayName": "TRENDVERSE Site Guide for LLMs",
+      "type": "text/markdown",
+      "url": "https://trendverse-ten.vercel.app/llms.txt",
+      "description": "Structured Markdown directory of TRENDVERSE news desks, career portals, evergreen explainers, and browser-local tools.",
+      "representativeQueries": [
+        "Summarize TRENDVERSE sections and documentation",
+        "List editorial categories and free tools on TRENDVERSE"
+      ]
+    }
+  ]
+}

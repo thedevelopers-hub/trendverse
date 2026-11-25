@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Clock, Globe } from 'lucide-react';
 import {
   formatCityClock,
@@ -22,6 +22,15 @@ export const LiveWorldClock: React.FC<LiveWorldClockProps> = ({ useUtc, onToggle
   }, []);
 
   const primary = formatLiveClock(now, useUtc);
+  const minuteBucket = Math.floor(now.getTime() / 60000);
+  const cityClocks = useMemo(
+    () =>
+      WORLD_CLOCK_CITIES.map((item) => ({
+        city: item.city,
+        ...formatCityClock(new Date(minuteBucket * 60000), item.timeZone),
+      })),
+    [minuteBucket]
+  );
 
   return (
     <section
@@ -43,7 +52,7 @@ export const LiveWorldClock: React.FC<LiveWorldClockProps> = ({ useUtc, onToggle
               <span aria-hidden="true">·</span>
               <span>{primary.dateText}</span>
               <span aria-hidden="true">·</span>
-              <span className="text-slate-400">{primary.zoneLabel}</span>
+              <span className="text-slate-300">{primary.zoneLabel}</span>
             </div>
 
             <div
@@ -55,7 +64,7 @@ export const LiveWorldClock: React.FC<LiveWorldClockProps> = ({ useUtc, onToggle
                 type="button"
                 onClick={() => onToggleUtc(false)}
                 className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
-                  !useUtc ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                  !useUtc ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'
                 }`}
               >
                 Local
@@ -64,7 +73,7 @@ export const LiveWorldClock: React.FC<LiveWorldClockProps> = ({ useUtc, onToggle
                 type="button"
                 onClick={() => onToggleUtc(true)}
                 className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer ${
-                  useUtc ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                  useUtc ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'
                 }`}
               >
                 UTC
@@ -74,20 +83,17 @@ export const LiveWorldClock: React.FC<LiveWorldClockProps> = ({ useUtc, onToggle
 
           {/* 8 World Clock Cities (Automatic DST via IANA time zones) */}
           <div className="flex items-center gap-3 overflow-x-auto pb-1 lg:pb-0">
-            <Globe className="h-3.5 w-3.5 text-slate-400 shrink-0 hidden sm:block" aria-hidden="true" />
+            <Globe className="h-3.5 w-3.5 text-slate-300 shrink-0 hidden sm:block" aria-hidden="true" />
             <div className="flex items-center gap-4 text-xs whitespace-nowrap">
-              {WORLD_CLOCK_CITIES.map((item) => {
-                const cityClock = formatCityClock(now, item.timeZone);
-                return (
-                  <div key={item.city} className="flex items-baseline gap-1.5">
-                    <span className="text-slate-400">{item.city}</span>
-                    <span className="font-mono-tabular font-medium text-white">
-                      {cityClock.time}
-                    </span>
-                    <span className="text-[10px] text-slate-500">{cityClock.tzShort}</span>
-                  </div>
-                );
-              })}
+              {cityClocks.map((item) => (
+                <div key={item.city} className="flex items-baseline gap-1.5">
+                  <span className="text-slate-300">{item.city}</span>
+                  <span className="font-mono-tabular font-medium text-white">
+                    {item.time}
+                  </span>
+                  <span className="text-[10px] text-slate-300">{item.tzShort}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

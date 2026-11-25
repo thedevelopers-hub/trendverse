@@ -85,7 +85,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({ variant, slotName }) => {
         <span className="text-[11px] font-medium uppercase tracking-[0.1em] text-slate-500">
           Advertisement
         </span>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-slate-600">
           Layout Preview Container ({slotName})
         </p>
       </aside>

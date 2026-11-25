@@ -1,0 +1,40 @@
+# TRENDVERSE
+
+> TRENDVERSE is an independent international digital publication delivering live verified RSS news dispatches, real-time Google Trends search momentum, AI-assisted 60-second news briefings, an international career and scholarship portal, and free browser-local utilities.
+
+Founded and developed by Vicky (`TRENDVERSE Editorial Team`), TRENDVERSE focuses on transparent source attribution, factual evergreen explainers, and zero-login public tools running cleanly on desktop and mobile web browsers.
+
+## Core Live Intelligence & Editorial Sections
+
+- [TRENDVERSE Homepage](https://trendverse-ten.vercel.app/): Main international newsroom, live world clock, breaking developments ticker, and feature directory.
+- [Live Global News Center](https://trendverse-ten.vercel.app/news-center): Multi-category live dispatches aggregated from BBC News, NPR, The Hindu, NASA, Google AI Blog, MIT News AI, and UN News Climate.
+- [Your World in 60 Seconds](https://trendverse-ten.vercel.app/briefing): Configurable 5-to-10 story daily global briefing with country and category filtering plus browser text-to-speech playback.
+- [Trend Battle](https://trendverse-ten.vercel.app/trend-battle): Side-by-side topic attention trajectory comparison powered by Wikimedia Pageviews and Google Suggest data.
+- [AI Intelligence Center](https://trendverse-ten.vercel.app/ai-center): Curated official AI research dispatches, verified tool directory, and model reference documentation links.
+- [Personal Reader Digest (What's New)](https://trendverse-ten.vercel.app/whats-new): Browser-local catch-up feed tracking newly arrived stories, bookmarks, and reading history without cookies or accounts.
+
+## Evergreen Reference Explainers
+
+- [How Modern AI Inference Infrastructure Scales Across Global Edge Regions](https://trendverse-ten.vercel.app/article/how-modern-ai-inference-infrastructure-scales-globally): Deep dive into LLM memory bandwidth bottlenecks, INT8/FP8 quantization, and regional routing.
+- [Zero-CLS Publishing Engineering for Global Mobile Readers](https://trendverse-ten.vercel.app/article/engineering-zero-cls-digital-publications-for-global-mobile-readers): Practical frontend architecture for eliminating layout shift and accelerating Core Web Vitals.
+- [Why Sovereign Cloud and Submarine Cable Infrastructure Shape Global Connectivity](https://trendverse-ten.vercel.app/article/sovereign-cloud-and-submarine-cable-infrastructure): Analysis of undersea fiber resilience, regional data sovereignty, and international cloud routing.
+- [Understanding Compound Real Returns, Purchasing Power, and Fee Drag](https://trendverse-ten.vercel.app/article/understanding-compound-real-returns-and-fee-drag): Clear mathematical guide to inflation-adjusted compounding and long-term cost drag.
+- [How Modern Solar Photovoltaics and Grid-Scale Storage Stabilize Power](https://trendverse-ten.vercel.app/article/how-solar-photovoltaics-and-grid-storage-work): Technical explainer on inverter synchronization, utility-scale batteries, and grid stability.
+- [Inside Autonomous Deep-Space Navigation and Telemetry Communication](https://trendverse-ten.vercel.app/article/deep-space-navigation-and-telemetry-communication): How interplanetary missions navigate, schedule Deep Space Network windows, and compress science telemetry.
+- [Why International Streaming Soundstages Shifted Toward Multi-Country Production](https://trendverse-ten.vercel.app/article/international-streaming-soundstages-multi-country-production): Overview of global studio capacity, localization pipelines, and cross-border media economics.
+- [Designing Ergonomic Digital Workspaces for Long-Form Focus](https://trendverse-ten.vercel.app/article/designing-ergonomic-digital-workspaces-for-long-form-focus): Evidence-based guide to visual contrast, display posture, and distraction-free digital workflows.
+
+## Careers & Browser Utilities
+
+- [TRENDVERSE CAREERS Portal](https://trendverse-ten.vercel.app/careers): Free public hub for verified job openings, student internships, remote roles, international scholarships, and official government civil service portals.
+- [Free Online Tools Suite](https://trendverse-ten.vercel.app/tools/word-counter): Browser-local utilities including Word Counter, Percentage Calculator, Age Calculator, Unit Converter, Text Case Converter, and Character Counter.
+- [Blogger XML Theme & Editorial Hub](https://trendverse-ten.vercel.app/blogger-theme): Documentation and human-review workflow tools for connecting public Blogger Atom/RSS feeds.
+
+## Governance, Standards & Machine Discovery
+
+- [About TRENDVERSE](https://trendverse-ten.vercel.app/policy/about): Publication mission, founder disclosure, and editorial scope.
+- [Editorial Policy](https://trendverse-ten.vercel.app/policy/editorial-policy): Verification standards, attribution rules, and AI-assistance boundaries.
+- [Corrections & Attribution Policy](https://trendverse-ten.vercel.app/policy/corrections-policy): Transparent process for correcting published errors and crediting primary sources.
+- [Privacy Policy](https://trendverse-ten.vercel.app/policy/privacy-policy): Browser-local storage guarantees, Consent Mode v2 controls, and third-party analytics disclosure.
+- [Sitemap](https://trendverse-ten.vercel.app/sitemap.xml): Complete XML index of public editorial, category, career, tool, and policy routes.
+- [Agentic Resource Discovery Catalog](https://trendverse-ten.vercel.app/.well-known/ard.json): Structured machine-readable capability catalog for TRENDVERSE endpoints.

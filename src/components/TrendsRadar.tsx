@@ -199,6 +199,7 @@ export const TrendsRadar: React.FC<TrendsRadarProps> = ({
                     href={trend.trendsExploreUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={`Explore ${trend.query} on Google Trends`}
                     className="inline-flex items-center gap-1 font-medium text-blue-400 hover:text-blue-300 shrink-0"
                   >
                     <span>Explore</span>

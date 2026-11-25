@@ -15,9 +15,9 @@ import {
   PolicyPageId,
   ToolId,
 } from './types/editorial';
-import { EVERGREEN_ARTICLES, getArticleBySlug } from './data/articles';
+import { EVERGREEN_ARTICLE_SUMMARIES, findArticleBySlug } from './data/articleSummaries';
 import { getCategoryBySlug, mapBloggerLabelsToCategory } from './data/categories';
-import { POLICY_PAGES } from './data/workflowAndPolicies';
+import { POLICY_PAGE_ID_SET } from './data/brandIdentity';
 import { fetchBloggerPosts } from './services/bloggerFeed';
 import {
   fetchGoogleTrendsFeed,
@@ -49,17 +49,31 @@ import {
 import { trackSpaPageView } from './utils/thirdPartyScripts';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { SearchModal } from './components/SearchModal';
 import { ConsentBanner } from './components/ConsentBanner';
 import { HomePage } from './components/HomePage';
-import { AIIntelligenceCenter } from './components/AIIntelligenceCenter';
-import { NewsCenterSection } from './components/NewsCenterSection';
 import { LiveWorldClock } from './components/LiveWorldClock';
-import { TrendsRadar } from './components/TrendsRadar';
-import { WorldIn60SecondsFeature } from './components/WorldIn60SecondsFeature';
-import { TrendBattleFeature } from './components/TrendBattleFeature';
-import { WhatsNewFeature } from './components/WhatsNewFeature';
 
+const SearchModal = lazy(() =>
+  import('./components/SearchModal').then((m) => ({ default: m.SearchModal }))
+);
+const AIIntelligenceCenter = lazy(() =>
+  import('./components/AIIntelligenceCenter').then((m) => ({ default: m.AIIntelligenceCenter }))
+);
+const NewsCenterSection = lazy(() =>
+  import('./components/NewsCenterSection').then((m) => ({ default: m.NewsCenterSection }))
+);
+const TrendsRadar = lazy(() =>
+  import('./components/TrendsRadar').then((m) => ({ default: m.TrendsRadar }))
+);
+const WorldIn60SecondsFeature = lazy(() =>
+  import('./components/WorldIn60SecondsFeature').then((m) => ({ default: m.WorldIn60SecondsFeature }))
+);
+const TrendBattleFeature = lazy(() =>
+  import('./components/TrendBattleFeature').then((m) => ({ default: m.TrendBattleFeature }))
+);
+const WhatsNewFeature = lazy(() =>
+  import('./components/WhatsNewFeature').then((m) => ({ default: m.WhatsNewFeature }))
+);
 const ArticlePage = lazy(() =>
   import('./components/ArticlePage').then((m) => ({ default: m.ArticlePage }))
 );
@@ -133,7 +147,7 @@ function resolvePolicyPageId(segment?: string): PolicyPageId {
   if (cleaned === 'contact-us') return 'contact';
   if (cleaned === 'privacy') return 'privacy-policy';
   if (cleaned === 'terms') return 'terms-and-conditions';
-  if (cleaned in POLICY_PAGES) return cleaned as PolicyPageId;
+  if (POLICY_PAGE_ID_SET.has(cleaned)) return cleaned as PolicyPageId;
   return 'about';
 }
 
@@ -222,7 +236,7 @@ export default function App() {
   const [useUtc, setUseUtc] = useState(false);
 
   // Evergreen / Blogger Articles State
-  const [articles, setArticles] = useState<Article[]>(EVERGREEN_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>(EVERGREEN_ARTICLE_SUMMARIES);
   const [connectedBlogUrl, setConnectedBlogUrl] = useState('');
   const [connectedBlogTitle, setConnectedBlogTitle] = useState<string | null>(null);
   const [feedLoading, setFeedLoading] = useState(false);
@@ -412,8 +426,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    void loadTrends(selectedTrendGeo, false);
+    const timer = window.setTimeout(() => {
+      void loadTrends(selectedTrendGeo, false);
+    }, 150);
     return () => {
+      window.clearTimeout(timer);
       trendsAbortRef.current?.abort();
     };
   }, [selectedTrendGeo, loadTrends]);
@@ -427,7 +444,7 @@ export default function App() {
   useEffect(() => {
     if (route.view === 'home') applySeoForHome();
     else if (route.view === 'article') {
-      const found = getArticleBySlug(route.slug, articles) || articles[0];
+      const found = findArticleBySlug(route.slug, articles) || articles[0];
       if (found) applySeoForArticle(found);
     } else if (route.view === 'category') {
       const cat = getCategoryBySlug(route.slug);
@@ -668,7 +685,7 @@ export default function App() {
   };
 
   const handleResetFeed = () => {
-    setArticles(EVERGREEN_ARTICLES);
+    setArticles(EVERGREEN_ARTICLE_SUMMARIES);
     setConnectedBlogUrl('');
     setConnectedBlogTitle(null);
     setFeedError(null);
@@ -676,7 +693,7 @@ export default function App() {
 
   const publicArticles = articles.filter((a) => a.editorialStatus !== 'draft-pending-review');
   const activeArticle =
-    route.view === 'article' ? getArticleBySlug(route.slug, articles) || publicArticles[0] || articles[0] : null;
+    route.view === 'article' ? findArticleBySlug(route.slug, articles) || publicArticles[0] || articles[0] : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900">
@@ -887,14 +904,18 @@ export default function App() {
 
       <Footer onNavigate={navigate} />
 
-      <SearchModal
-        isOpen={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        articles={publicArticles}
-        liveNews={newsData?.items ?? []}
-        trends={trendsData?.trends ?? []}
-        onNavigate={navigate}
-      />
+      {searchOpen && (
+        <Suspense fallback={null}>
+          <SearchModal
+            isOpen={searchOpen}
+            onClose={() => setSearchOpen(false)}
+            articles={publicArticles}
+            liveNews={newsData?.items ?? []}
+            trends={trendsData?.trends ?? []}
+            onNavigate={navigate}
+          />
+        </Suspense>
+      )}
 
       <ConsentBanner onNavigate={navigate} />
     </div>

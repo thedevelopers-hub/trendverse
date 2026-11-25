@@ -1,5 +1,5 @@
 import { Article, CategoryInfo, PolicyPageId } from '../types/editorial';
-import { FOUNDER_BRAND_IDENTITY, POLICY_PAGES } from '../data/workflowAndPolicies';
+import { FOUNDER_BRAND_IDENTITY, POLICY_SEO_META } from '../data/brandIdentity';
 import { getCanonicalOrigin } from './routes';
 
 function upsertMeta(attr: 'name' | 'property', key: string, content: string): void {
@@ -380,7 +380,7 @@ export function applySeoForTools(toolId?: string): void {
 }
 
 export function applySeoForPolicy(pageId: PolicyPageId): void {
-  const page = POLICY_PAGES[pageId];
+  const page = POLICY_SEO_META[pageId];
   const title = page.seoTitle || `${page.title} — TRENDVERSE`;
   const desc = truncateWordBoundary(page.seoDescription || page.subtitle, 158);
   const origin = getCanonicalOrigin();
