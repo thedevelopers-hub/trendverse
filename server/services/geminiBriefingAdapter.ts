@@ -4,6 +4,7 @@ import {
   DailyBriefingResponse,
   LiveNewsItem,
 } from '../types.js';
+import { selectStrictMatchingCandidates } from './briefingFilter.js';
 
 const ALLOWED_FREE_TEXT_MODELS = ['gemini-4-hydrogen', 'gemini-3.1-flash-lite'] as const;
 type SupportedBriefingModel = (typeof ALLOWED_FREE_TEXT_MODELS)[number];
@@ -177,118 +178,19 @@ async function getVerifiedAvailableModels(ai: GoogleGenAI, apiKey: string): Prom
   return available;
 }
 
-const COUNTRY_KEYWORD_MAP: Record<string, RegExp> = {
-  India: /\bindia\b|\bindian\b|\bnew delhi\b|\bmumbai\b|\bbengaluru\b|\bchennai\b|\bkolkata\b|\bhyderabad\b/,
-  'United States': /\bunited states\b|\bu\.s\.?\b|\busa\b|\bwashington\b|\bnew york\b|\bcalifornia\b/,
-  'United Kingdom': /\bunited kingdom\b|\buk\b|\bbritain\b|\bbritish\b|\blondon\b|\bengland\b/,
-  Australia: /\baustralia\b|\baustralian\b|\bsydney\b|\bmelbourne\b|\bcanberra\b/,
-  Japan: /\bjapan\b|\bjapanese\b|\btokyo\b|\bosaka\b/,
-  Germany: /\bgermany\b|\bgerman\b|\bberlin\b|\bmunich\b|\bfrankfurt\b/,
-  France: /\bfrance\b|\bfrench\b|\bparis\b|\blyon\b/,
-  Canada: /\bcanada\b|\bcanadian\b|\bottawa\b|\btoronto\b|\bvancouver\b/,
-  Global: /\bglobal\b|\bun\b|\bunited nations\b|\bworld\b|\binternational\b/,
-};
-
-const CATEGORY_KEYWORD_MAP: Record<string, RegExp> = {
-  World: /\bworld\b|\bdiplom|\bsummit\b|\bforeign\b|\bborder\b|\bunited nations\b|\btreaty\b/,
-  India: /\bindia\b|\bnew delhi\b|\bmumbai\b|\blok sabha\b|\brbi\b|\bisro\b/,
-  Technology: /\btech\b|\bsoftware\b|\bchip\b|\bsemiconductor\b|\bcyber\b|\bcloud\b|\bdigital\b/,
-  'Artificial Intelligence': /\bai\b|\bartificial intelligence\b|\bllm\b|\bgemini\b|\bopenai\b|\bmachine learning\b|\bmodel\b/,
-  Business: /\bbusiness\b|\beconom|\bmarket\b|\binflation\b|\bbank\b|\btrade\b|\bfinanc|\bstock\b/,
-  Science: /\bscience\b|\bresearch\b|\bphysics\b|\bbiology\b|\bmedical\b|\bstudy\b/,
-  Space: /\bspace\b|\bnasa\b|\borbit\b|\brocket\b|\bmoon\b|\bmars\b|\btelescope\b|\bsatellite\b/,
-  Entertainment: /\bfilm\b|\bcinema\b|\bmusic\b|\bstream\b|\bseries\b|\btelevision\b|\baward\b|\bactor\b|\bmovie\b|\bbollywood\b|\bhollywood\b/,
-  Climate: /\bclimate\b|\bcarbon\b|\bemissions\b|\brenewable\b|\bwarming\b|\benergy\b|\bweather\b/,
-};
-
-function matchesCountry(item: LiveNewsItem, countryPref: string): boolean {
-  if (countryPref === 'All Countries') return true;
-  if (item.countryTag.toLowerCase() === countryPref.toLowerCase()) return true;
-  const rx = COUNTRY_KEYWORD_MAP[countryPref];
-  if (!rx) return false;
-  return rx.test(`${item.title} ${item.summary}`);
-}
-
-function matchesCategory(item: LiveNewsItem, categoryPref: string): boolean {
-  if (categoryPref === 'All Categories') return true;
-  if (item.category.toLowerCase() === categoryPref.toLowerCase()) return true;
-  const rx = CATEGORY_KEYWORD_MAP[categoryPref];
-  if (!rx) return false;
-  return rx.test(`${item.title} ${item.summary}`);
-}
-
 export function selectFilteredCandidates(
   items: LiveNewsItem[],
   countryPref: string,
   categoryPref: string,
   targetCount: number
 ): { candidates: LiveNewsItem[]; note: string } {
-  const hasCountryFilter = countryPref !== 'All Countries';
-  const hasCategoryFilter = categoryPref !== 'All Categories';
-
-  if (!hasCountryFilter && !hasCategoryFilter) {
-    return { candidates: items, note: '' };
-  }
-
-  const exactMatches: LiveNewsItem[] = [];
-  const countryPriorityMatches: LiveNewsItem[] = [];
-  const categoryOnlyMatches: LiveNewsItem[] = [];
-  const restItems: LiveNewsItem[] = [];
-
-  for (const item of items) {
-    const cMatch = matchesCountry(item, countryPref);
-    const catMatch = matchesCategory(item, categoryPref);
-    if (cMatch && catMatch) {
-      exactMatches.push(item);
-    } else if (hasCountryFilter && cMatch) {
-      countryPriorityMatches.push(item);
-    } else if (hasCategoryFilter && catMatch) {
-      categoryOnlyMatches.push(item);
-    } else {
-      restItems.push(item);
-    }
-  }
-
-  // Prioritize India + selected category cleanly when both are chosen
-  const interleavedSecondary: LiveNewsItem[] = [];
-  const maxSecondaryLen = Math.max(countryPriorityMatches.length, categoryOnlyMatches.length);
-  for (let i = 0; i < maxSecondaryLen; i++) {
-    if (i < categoryOnlyMatches.length) interleavedSecondary.push(categoryOnlyMatches[i]);
-    if (i < countryPriorityMatches.length) interleavedSecondary.push(countryPriorityMatches[i]);
-  }
-
-  const pool = [...exactMatches, ...interleavedSecondary, ...restItems];
-  const notes: string[] = [];
-
-  if (exactMatches.length >= targetCount) {
-    return { candidates: exactMatches, note: '' };
-  }
-
-  if (hasCountryFilter && hasCategoryFilter) {
-    if (exactMatches.length === 0) {
-      notes.push(
-        `No current RSS dispatches matched both ${countryPref} and ${categoryPref}; included closest ${categoryPref} and ${countryPref} verified stories.`
-      );
-    } else {
-      notes.push(
-        `Matched ${exactMatches.length} stories for ${countryPref} + ${categoryPref}; supplemented with related ${countryPref} and ${categoryPref} verified dispatches to reach ${targetCount} stories.`
-      );
-    }
-  } else if (hasCountryFilter && exactMatches.length < targetCount) {
-    notes.push(
-      exactMatches.length > 0
-        ? `Included ${exactMatches.length} dispatches focused on ${countryPref} alongside global developments to complete your ${targetCount}-story briefing.`
-        : `No live RSS dispatches were explicitly tagged for ${countryPref} in this refresh; showing worldwide verified developments.`
-    );
-  } else if (hasCategoryFilter && exactMatches.length < targetCount) {
-    notes.push(
-      exactMatches.length > 0
-        ? `Included ${exactMatches.length} ${categoryPref} stories alongside cross-desk global developments to reach ${targetCount} stories.`
-        : `No live RSS dispatches were explicitly tagged under ${categoryPref} in this refresh; showing top cross-desk developments.`
-    );
-  }
-
-  return { candidates: pool, note: notes.join(' ') };
+  const { candidates, note } = selectStrictMatchingCandidates(
+    items,
+    countryPref,
+    categoryPref,
+    targetCount
+  );
+  return { candidates, note };
 }
 
 function groundStoriesToFeed(
@@ -330,8 +232,8 @@ function groundStoriesToFeed(
 
     grounded.push({
       headline: (s.headline || matched.title).trim(),
-      category: (s.category || matched.category).trim(),
-      countryTag: (s.countryTag || matched.countryTag).trim(),
+      category: matched.category,
+      countryTag: matched.countryTag,
       summary: (s.summary || matched.summary).trim(),
       whyItMatters:
         (s.whyItMatters || 'Selected as a notable development from verified international reporting.').trim(),
@@ -343,7 +245,9 @@ function groundStoriesToFeed(
     });
   }
 
-  return grounded;
+  return grounded.sort(
+    (a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt)
+  );
 }
 
 export interface BriefingPreferences {
@@ -455,6 +359,25 @@ export async function generateDailyGlobalBriefing(
     };
   }
 
+  if (candidates.length === 0) {
+    return {
+      id: baseId,
+      aiAvailable: false,
+      fallbackMode: true,
+      label: 'Verified Live RSS Filter · 0 Matching Stories Found',
+      briefingDate: todayDate,
+      generatedAt: nowIso,
+      modelName: primaryModel,
+      countryPreference: countryPref,
+      categoryPreference: categoryPref,
+      overview: '',
+      stories: [],
+      fallbackArticles: [],
+      note,
+      errorMessage: note || '0 verified matching stories found for the selected filters.',
+    };
+  }
+
   const dedupeKey = `${countryPref}::${categoryPref}::${targetCount}`;
   const topUrlsSignature = candidates.slice(0, 3).map((c) => c.url).join('|');
   const cacheKey = `${dedupeKey}::${topUrlsSignature}`;
@@ -489,8 +412,7 @@ export async function generateDailyGlobalBriefing(
       },
     });
 
-    const inputSliceSize = Math.min(18, Math.max(targetCount + 6, 14));
-    const digestInput = candidates.slice(0, inputSliceSize).map((item) => ({
+    const digestInput = candidates.slice(0, targetCount).map((item) => ({
       title: item.title,
       publisher: item.publisher,
       category: item.category,
@@ -503,13 +425,12 @@ export async function generateDailyGlobalBriefing(
     const prompt = [
       `You are an international newsroom editor preparing "Your World in 60 Seconds" for ${todayDate}.`,
       `Reader preferences: Country="${countryPref}", Category="${categoryPref}".`,
-      `Select exactly ${Math.min(targetCount, digestInput.length)} distinct, non-duplicate developments from the verified RSS items below (prioritizing items matching the requested Country and Category first).`,
+      `Summarize ONLY these ${digestInput.length} verified matching developments below (maximum target: ${targetCount}). Do not invent, pad, or add stories beyond what is provided.`,
       'STRICT GROUNDING RULES:',
-      '1. Group related developments and never include duplicate stories.',
-      '2. Summarize strictly from the provided headlines and summaries. Never invent facts, numbers, quotes, URLs, or unsupported predictions.',
-      '3. Copy exact sourceName (publisher), sourceUrl (url), countryTag, and publishedAt values verbatim from the matched input item.',
-      '4. Keep each summary crisp (25-40 words) so the full briefing can be read or listened to in about 60 seconds.',
-      '5. For "whatHappensNext", only include next steps explicitly stated in the provided text; otherwise write "Awaiting further official updates."',
+      '1. Never invent facts, numbers, quotes, URLs, categories, countries, or unsupported predictions.',
+      '2. Copy exact sourceName (publisher), sourceUrl (url), countryTag, category, and publishedAt values verbatim from each matched input item.',
+      '3. Keep each summary crisp (25-40 words) so the briefing can be read or listened to in about 60 seconds.',
+      '4. For "whatHappensNext", only include next steps explicitly stated in the provided text; otherwise write "Awaiting further official updates."',
       '',
       JSON.stringify(digestInput),
     ].join('\n');

@@ -119,3 +119,16 @@ export function formatRelativeTime(isoString: string, nowMs: number = Date.now()
   const diffDays = Math.floor(diffHrs / 24);
   return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
 }
+
+export function getArticleFreshnessLabel(isoString: string, nowMs: number = Date.now()): string {
+  const target = Date.parse(isoString);
+  if (Number.isNaN(target)) return 'Timestamp unverified';
+  const ageMs = nowMs - target;
+  if (ageMs < 0) return 'Scheduled';
+  const ageHours = ageMs / (60 * 60 * 1000);
+  if (ageHours < 6) return 'Fresh (<6h)';
+  if (ageHours < 24) return 'Today (<24h)';
+  if (ageHours < 48) return 'Recent (1–2d)';
+  const ageDays = Math.floor(ageHours / 24);
+  return `Older article (${ageDays}d ago)`;
+}

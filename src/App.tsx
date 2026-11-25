@@ -5,6 +5,7 @@ import {
   TrendGeoCode,
   TrendsResponse,
 } from '../server/types';
+import { selectStrictMatchingCandidates } from '../server/services/briefingFilter';
 import {
   AppRoute,
   Article,
@@ -489,22 +490,12 @@ export default function App() {
     } catch (err) {
       if (reqId !== briefingReqIdRef.current) return;
       const isTimeout = err instanceof Error && err.name === 'AbortError';
-      const localItems = newsData?.items ?? [];
-      const countryLower = briefingCountryPref.toLowerCase();
-      const catLower = briefingCategoryPref.toLowerCase();
-      const exact = localItems.filter(
-        (item) =>
-          (briefingCountryPref === 'All Countries' || item.countryTag.toLowerCase() === countryLower) &&
-          (briefingCategoryPref === 'All Categories' || item.category.toLowerCase() === catLower)
+      const { candidates, note } = selectStrictMatchingCandidates(
+        newsData?.items ?? [],
+        briefingCountryPref,
+        briefingCategoryPref,
+        briefingCountPref
       );
-      const partial = localItems.filter(
-        (item) =>
-          !exact.includes(item) &&
-          ((briefingCountryPref !== 'All Countries' && item.countryTag.toLowerCase() === countryLower) ||
-            (briefingCategoryPref !== 'All Categories' && item.category.toLowerCase() === catLower))
-      );
-      const rest = localItems.filter((item) => !exact.includes(item) && !partial.includes(item));
-      const clientFallback = [...exact, ...partial, ...rest].slice(0, briefingCountPref);
 
       setBriefingData({
         id: `briefing-err-${Date.now()}`,
@@ -518,12 +509,13 @@ export default function App() {
         categoryPreference: briefingCategoryPref,
         overview: '',
         stories: [],
-        fallbackArticles: clientFallback,
+        fallbackArticles: candidates,
+        note: note || undefined,
         errorMessage: isTimeout
-          ? 'The briefing request timed out. Displaying verified live RSS headlines below — please try again.'
+          ? 'The briefing request timed out. Displaying verified matching RSS headlines below — please try again.'
           : err instanceof Error
           ? err.message
-          : 'Unable to reach briefing endpoint. Displaying verified live RSS headlines below.',
+          : 'Unable to reach briefing endpoint. Displaying verified matching RSS headlines below.',
       });
     } finally {
       window.clearTimeout(timeoutId);

@@ -46,6 +46,20 @@ export const PUBLIC_NEWS_SOURCES: FeedSourceConfig[] = [
     countryTag: 'United Kingdom',
   },
   {
+    id: 'the-hindu-tech',
+    name: 'The Hindu Technology',
+    url: 'https://www.thehindu.com/sci-tech/technology/feeder/default.rss',
+    category: 'Technology',
+    countryTag: 'India',
+  },
+  {
+    id: 'economictimes-tech',
+    name: 'Economic Times Tech',
+    url: 'https://economictimes.indiatimes.com/tech/rssfeeds/13357270.cms',
+    category: 'Technology',
+    countryTag: 'India',
+  },
+  {
     id: 'google-ai-blog',
     name: 'Google AI Blog',
     url: 'https://blog.google/technology/ai/rss/',
@@ -65,6 +79,20 @@ export const PUBLIC_NEWS_SOURCES: FeedSourceConfig[] = [
     url: 'https://feeds.bbci.co.uk/news/business/rss.xml',
     category: 'Business',
     countryTag: 'United Kingdom',
+  },
+  {
+    id: 'the-hindu-business',
+    name: 'The Hindu Business',
+    url: 'https://www.thehindu.com/business/feeder/default.rss',
+    category: 'Business',
+    countryTag: 'India',
+  },
+  {
+    id: 'economictimes-economy',
+    name: 'Economic Times Economy',
+    url: 'https://economictimes.indiatimes.com/news/economy/rssfeeds/1373380680.cms',
+    category: 'Business',
+    countryTag: 'India',
   },
   {
     id: 'bbc-science',
@@ -156,19 +184,29 @@ function extractThumbnail(item: Record<string, unknown>): string | undefined {
   return undefined;
 }
 
-function inferCountryTag(title: string, summary: string, fallback: string): string {
-  const text = `${title} ${summary}`.toLowerCase();
-  if (/\bindia\b|\bnew delhi\b|\bmumbai\b|\bbengaluru\b/.test(text)) return 'India';
-  if (/\bunited states\b|\bu\.s\.\b|\bwashington\b|\bnew york\b|\bcalifornia\b/.test(text)) return 'United States';
-  if (/\buk\b|\bbritain\b|\blondon\b|\bengland\b|\bscotland\b/.test(text)) return 'United Kingdom';
-  if (/\bcanada\b|\bottawa\b|\btoronto\b/.test(text)) return 'Canada';
-  if (/\baustralia\b|\bsydney\b|\bcanberra\b/.test(text)) return 'Australia';
-  if (/\bjapan\b|\btokyo\b/.test(text)) return 'Japan';
-  if (/\bgermany\b|\bberlin\b/.test(text)) return 'Germany';
-  if (/\bfrance\b|\bparis\b/.test(text)) return 'France';
-  if (/\bbrazil\b|\bbrasilia\b|\bsao paulo\b/.test(text)) return 'Brazil';
-  if (/\bdubai\b|\buae\b|\bsaudi\b/.test(text)) return 'Middle East / UAE';
-  if (/\bsingapore\b/.test(text)) return 'Singapore';
+const INDIA_CONTENT_PATTERN =
+  /\bindia\b|\bindian\b|\bnew delhi\b|\bdelhi\b|\bmumbai\b|\bbengaluru\b|\bbangalore\b|\bhyderabad\b|\bchennai\b|\bkolkata\b|\bpune\b|\bahmedabad\b|\bgurugram\b|\bnoida\b|\bkerala\b|\bkarnataka\b|\btamil nadu\b|\bmaharashtra\b|\buttar pradesh\b|\bgujarat\b|\brbi\b|\bsebi\b|\bisro\b|\bupi\b|\bnpci\b|\bmeity\b|\btrai\b|\bpli\b|\bmake in india\b|\bsensex\b|\bnifty\b|\bbse\b|\bnse\b|\brupee\b|\binr\b|\bcrore\b|\blakh\b|\binfosys\b|\btcs\b|\bwipro\b|\breliance\b|\bjio\b|\btata\b|\badani\b|\bmahindra\b|\bbharti airtel\b|\bflipkart\b|\bzomato\b|\bswiggy\b|\bpaytm\b|\bphonepe\b|\brazorpay\b|\balembic\b|\bcipla\b|\bsun pharma\b|\bdr reddy\b|\bbiocon\b|\biit\b|\biim\b|\biffi\b|\bbollywood\b|\btollywood\b|\bkollywood\b|\bsudha ragunathan\b|\baparna sen\b|\braga\b|\bhindustan\b/i;
+
+function inferCountryTag(title: string, summary: string, url: string, fallback: string): string {
+  const text = `${title} ${summary} ${url}`;
+  if (INDIA_CONTENT_PATTERN.test(text)) return 'India';
+  if (/\bunited states\b|\bu\.s\.?\b|\busa\b|\bwashington\b|\bnew york\b|\bcalifornia\b|\bsilicon valley\b|\bfcc\b|\bwhite house\b|\bwall street\b|\btrump\b|\bnasa\b/i.test(text)) {
+    return 'United States';
+  }
+  if (/\bunited kingdom\b|\buk\b|\bbritain\b|\bbritish\b|\blondon\b|\bengland\b|\bscotland\b|\bpoundland\b|\bnhs\b/i.test(text)) {
+    return 'United Kingdom';
+  }
+  if (/\bcanada\b|\bcanadian\b|\bottawa\b|\btoronto\b|\bvancouver\b/i.test(text)) return 'Canada';
+  if (/\baustralia\b|\baustralian\b|\bsydney\b|\bmelbourne\b|\bcanberra\b/i.test(text)) return 'Australia';
+  if (/\bjapan\b|\bjapanese\b|\btokyo\b|\bosaka\b/i.test(text)) return 'Japan';
+  if (/\bgermany\b|\bgerman\b|\bberlin\b|\bmunich\b|\bfrankfurt\b/i.test(text)) return 'Germany';
+  if (/\bfrance\b|\bfrench\b|\bparis\b|\blyon\b/i.test(text)) return 'France';
+  if (/\bchina\b|\bchinese\b|\bbeijing\b|\bshanghai\b/i.test(text)) return 'China';
+  if (/\bmalaysia\b|\bkuala lumpur\b/i.test(text)) return 'Malaysia';
+  if (/\bsingapore\b/i.test(text)) return 'Singapore';
+  if (/\bbrazil\b|\bbrasilia\b|\bsao paulo\b/i.test(text)) return 'Brazil';
+  if (/\bdubai\b|\buae\b|\bsaudi\b/i.test(text)) return 'Middle East / UAE';
+  if (/\bunited nations\b|\bglobal\b|\binternational\b|\bworldwide\b/i.test(text)) return 'Global';
   return fallback;
 }
 
@@ -327,7 +365,7 @@ async function fetchSingleSource(source: FeedSourceConfig): Promise<LiveNewsItem
           publisher: source.name,
           sourceId: source.id,
           category: source.category,
-          countryTag: inferCountryTag(title, summary, source.countryTag),
+          countryTag: inferCountryTag(title, summary, url, source.countryTag),
           publishedAt: publishedIso,
           thumbnailUrl: extractThumbnail(entry),
           isBreakingEligible,
