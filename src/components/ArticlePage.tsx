@@ -1,13 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ExternalLink, FileCheck2, Link2, Share2 } from 'lucide-react';
-import { AppRoute, Article } from '../types/editorial';
+import { AppRoute, Article, CategorySlug } from '../types/editorial';
 import { EVERGREEN_ARTICLES, getArticleBySlug } from '../data/articles';
 import { getAuthorProfile } from '../data/authors';
+import { EDITORIAL_CATEGORIES } from '../data/categories';
 import { routeToUrl } from '../utils/routes';
 import { applySeoForArticle } from '../utils/seo';
 import { trackCtaClick } from '../utils/thirdPartyScripts';
 import { EditorialVisual } from './EditorialVisual';
 import { AdSlot } from './AdSlot';
+
+const DESK_AFFINITY: Record<CategorySlug, CategorySlug[]> = {
+  'technology-ai': ['entertainment', 'science-space', 'business-finance'],
+  world: ['business-finance', 'technology-ai', 'science-space'],
+  'business-finance': ['world', 'technology-ai', 'lifestyle'],
+  'science-space': ['technology-ai', 'world', 'lifestyle'],
+  entertainment: ['technology-ai', 'lifestyle', 'world'],
+  lifestyle: ['technology-ai', 'science-space', 'business-finance'],
+};
 
 interface ArticlePageProps {
   article: Article;
@@ -34,21 +44,31 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
   const [copied, setCopied] = useState(false);
   const authorProfile = getAuthorProfile(article.authorId);
 
-  // Show related articles ONLY when genuinely relevant (same desk or shared topic labels)
+  // Rank related articles by same category, specific shared labels, then cross-desk topical affinity
   const relatedArticles = useMemo(() => {
-    const currentLabels = new Set(
+    const specificLabels = new Set(
       article.labels.map((l) => l.toLowerCase()).filter((l) => l !== 'open standards')
     );
+    const allLabels = new Set(article.labels.map((l) => l.toLowerCase()));
+    const affinityOrder = DESK_AFFINITY[article.category] || [];
+
     return allArticles
       .filter((candidate) => candidate.id !== article.id)
       .map((candidate) => {
-        const sameCategory = candidate.category === article.category ? 2 : 0;
-        const sharedLabels = candidate.labels.filter((l) =>
-          currentLabels.has(l.toLowerCase())
+        const sameCategory = candidate.category === article.category ? 6 : 0;
+        const sharedSpecific = candidate.labels.filter((l) =>
+          specificLabels.has(l.toLowerCase())
         ).length;
-        return { candidate, score: sameCategory + sharedLabels };
+        const sharedAny = candidate.labels.filter((l) =>
+          allLabels.has(l.toLowerCase())
+        ).length;
+        const affinityIdx = affinityOrder.indexOf(candidate.category);
+        const affinityScore = affinityIdx >= 0 ? 3 - affinityIdx : 0;
+        return {
+          candidate,
+          score: sameCategory + sharedSpecific * 3 + sharedAny + affinityScore,
+        };
       })
-      .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 3)
       .map((entry) => entry.candidate);
@@ -111,8 +131,14 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
 
       {/* Article Header */}
       <header className="max-w-3xl">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mb-3">
-          <span className="font-semibold text-blue-600">{article.categoryName}</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mb-3">
+          <a
+            href={routeToUrl({ view: 'category', slug: article.category })}
+            onClick={(e) => handleSpaNav(e, { view: 'category', slug: article.category })}
+            className="font-semibold text-blue-600 hover:underline cursor-pointer"
+          >
+            {article.categoryName}
+          </a>
           <span aria-hidden="true">·</span>
           <span>{article.readTimeMinutes} min read</span>
           <span aria-hidden="true">·</span>
@@ -364,16 +390,35 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
               </section>
             )}
 
-            {/* Topic Labels */}
+            {/* Topic Labels & Category Desk Links */}
             <div className="border-t border-slate-200 pt-6">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
                 <span className="font-semibold text-slate-700">Topics:</span>
-                {article.labels.map((label, idx) => (
-                  <React.Fragment key={label}>
-                    <span>{label}</span>
-                    {idx < article.labels.length - 1 && <span aria-hidden="true">·</span>}
-                  </React.Fragment>
-                ))}
+                {article.labels.map((label, idx) => {
+                  const matchingCat = EDITORIAL_CATEGORIES.find(
+                    (c) =>
+                      c.name.toLowerCase() === label.toLowerCase() ||
+                      c.bloggerLabel.toLowerCase() === label.toLowerCase()
+                  );
+                  return (
+                    <React.Fragment key={label}>
+                      {matchingCat ? (
+                        <a
+                          href={routeToUrl({ view: 'category', slug: matchingCat.slug })}
+                          onClick={(e) =>
+                            handleSpaNav(e, { view: 'category', slug: matchingCat.slug })
+                          }
+                          className="font-medium text-blue-700 hover:underline cursor-pointer"
+                        >
+                          {label}
+                        </a>
+                      ) : (
+                        <span>{label}</span>
+                      )}
+                      {idx < article.labels.length - 1 && <span aria-hidden="true">·</span>}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
 
@@ -496,6 +541,7 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
                   <a
                     href={relUrl}
                     onClick={(e) => handleSpaNav(e, { view: 'article', slug: rel.slug })}
+                    aria-label={`Read explainer: ${rel.title}`}
                     className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 cursor-pointer"
                   >
                     <span>Read story</span>
@@ -504,6 +550,38 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({
                 </article>
               );
             })}
+          </div>
+
+          {/* Editorial Desks Directory Bar */}
+          <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-700">
+                Explore Editorial Desks:
+              </span>
+              <div className="flex flex-wrap gap-2 text-xs font-medium">
+                {EDITORIAL_CATEGORIES.map((cat) => (
+                  <a
+                    key={cat.slug}
+                    href={routeToUrl({ view: 'category', slug: cat.slug })}
+                    onClick={(e) => handleSpaNav(e, { view: 'category', slug: cat.slug })}
+                    className={`rounded-lg border px-3 py-1.5 transition-colors cursor-pointer ${
+                      cat.slug === article.category
+                        ? 'border-blue-600 bg-blue-600 text-white'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-blue-500 hover:text-blue-700'
+                    }`}
+                  >
+                    {cat.name}
+                  </a>
+                ))}
+                <a
+                  href={routeToUrl({ view: 'news-center' })}
+                  onClick={(e) => handleSpaNav(e, { view: 'news-center' })}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-slate-700 hover:border-blue-500 hover:text-blue-700 cursor-pointer"
+                >
+                  Live Global News Center
+                </a>
+              </div>
+            </div>
           </div>
         </section>
       )}

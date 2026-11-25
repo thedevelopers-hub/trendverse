@@ -143,7 +143,8 @@ export type AppRoute =
   | { view: 'whats-new' }
   | { view: 'careers'; tab: CareersTab; toolId?: CareerToolId }
   | { view: 'blogger-hub' }
-  | { view: 'policy'; pageId: PolicyPageId };
+  | { view: 'policy'; pageId: PolicyPageId }
+  | { view: 'not-found'; attemptedPath?: string };
 
 export interface EditorialWorkflowStep {
   stepNumber: string;

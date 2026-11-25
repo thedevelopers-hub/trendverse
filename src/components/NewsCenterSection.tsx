@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, RefreshCw, ShieldCheck } from 'lucide-react';
 import { LiveNewsResponse, NewsCategory } from '../../server/types';
+import { syncLiveNewsSchema } from '../utils/seo';
 import { formatPublicationTimestamp, formatRelativeTime } from '../utils/timeFormat';
 
 interface NewsCenterSectionProps {
@@ -54,6 +55,23 @@ export const NewsCenterSection: React.FC<NewsCenterSectionProps> = ({
   }, [data, selectedCat]);
 
   const visibleItems = compactMode ? filteredItems.slice(0, 6) : filteredItems.slice(0, 18);
+
+  useEffect(() => {
+    if (mode !== 'page' || visibleItems.length === 0) return;
+    syncLiveNewsSchema(
+      visibleItems.map((item) => ({
+        headline: item.title,
+        url: item.url,
+        datePublished: item.publishedAt,
+        publisher: item.publisher,
+        section: item.category,
+        description: item.summary,
+      }))
+    );
+    return () => {
+      syncLiveNewsSchema(null);
+    };
+  }, [mode, visibleItems]);
 
   return (
     <section id="live-news-center" className="mx-auto max-w-[1200px] px-4 sm:px-6 py-12">

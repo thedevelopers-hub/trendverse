@@ -14,6 +14,7 @@ import {
 import { DailyBriefingResponse } from '../../server/types';
 import { AppRoute, EditorialDraft } from '../types/editorial';
 import { routeToUrl } from '../utils/routes';
+import { syncLiveNewsSchema } from '../utils/seo';
 import { trackCtaClick } from '../utils/thirdPartyScripts';
 import { formatPublicationTimestamp, getArticleFreshnessLabel } from '../utils/timeFormat';
 
@@ -134,6 +135,38 @@ export const WorldIn60SecondsFeature: React.FC<WorldIn60SecondsFeatureProps> = (
     stopAudio();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [briefing?.id]);
+
+  useEffect(() => {
+    if (mode !== 'page' || !briefing) return;
+    if (briefing.aiAvailable && !briefing.fallbackMode && briefing.stories.length > 0) {
+      syncLiveNewsSchema(
+        briefing.stories.map((story) => ({
+          headline: story.headline,
+          url: story.sourceUrl,
+          datePublished: story.publishedAt || briefing.generatedAt,
+          publisher: story.sourceName,
+          section: story.category,
+          description: story.summary,
+        }))
+      );
+    } else if (briefing.fallbackArticles && briefing.fallbackArticles.length > 0) {
+      syncLiveNewsSchema(
+        briefing.fallbackArticles.map((art) => ({
+          headline: art.title,
+          url: art.url,
+          datePublished: art.publishedAt,
+          publisher: art.publisher,
+          section: art.category,
+          description: art.summary,
+        }))
+      );
+    } else {
+      syncLiveNewsSchema(null);
+    }
+    return () => {
+      syncLiveNewsSchema(null);
+    };
+  }, [mode, briefing]);
 
   const speakSegments = useMemo(() => {
     if (!briefing) return [];

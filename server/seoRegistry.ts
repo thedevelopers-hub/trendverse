@@ -15,7 +15,7 @@ export interface SitemapEntry {
 export interface RouteSeoData {
   title: string;
   description: string;
-  canonicalUrl: string;
+  canonicalUrl?: string;
   robots: string;
   ogType: 'website' | 'article';
   imageUrl?: string;
@@ -270,6 +270,8 @@ function resolveRoutePathForLink(route: NonNullable<Article['contextualLinks']>[
       return '/blogger-theme';
     case 'policy':
       return `/policy/${encodeURIComponent(route.pageId)}`;
+    case 'not-found':
+      return route.attemptedPath || '/';
   }
 }
 
@@ -279,8 +281,8 @@ function buildCoreNodes(origin: string, pageUrl: string, title: string, pageType
       '@type': 'Person',
       '@id': `${origin}/#founder-vicky`,
       name: FOUNDER_BRAND_IDENTITY.founderName,
-      jobTitle: 'Founder & Developer',
-      description: 'Founder and Developer of TRENDVERSE.',
+      jobTitle: 'Founder, Developer & Managing Editor',
+      description: 'Founder, Developer, and Managing Editor of TRENDVERSE.',
       worksFor: { '@id': `${origin}/#organization` },
     },
     {
@@ -288,10 +290,21 @@ function buildCoreNodes(origin: string, pageUrl: string, title: string, pageType
       '@id': `${origin}/#organization`,
       name: FOUNDER_BRAND_IDENTITY.brandName,
       url: `${origin}/`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${origin}/logo.png`,
+        width: 512,
+        height: 512,
+      },
       slogan: FOUNDER_BRAND_IDENTITY.tagline,
       description:
         'Discover What\'s Next. An independent global digital media, live trend intelligence, careers, and free utilities platform founded and developed by Vicky.',
       founder: { '@id': `${origin}/#founder-vicky` },
+      publishingPrinciples: `${origin}/policy/editorial-policy`,
+      correctionsPolicy: `${origin}/policy/corrections-policy`,
+      actionableFeedbackPolicy: `${origin}/policy/contact`,
+      masthead: `${origin}/policy/about`,
+      ownershipFundingInfo: `${origin}/policy/about`,
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'editorial',
@@ -357,6 +370,7 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
   const title = article.seoTitle || `${article.title} — TRENDVERSE`;
   const description = truncateWordBoundary(article.seoDescription || article.summary, 158);
   const wordCount = computeArticleWordCount(article);
+  const resolvedImage = article.imageUrl || `${origin}/og-image.png`;
 
   const sectionsHtml = article.sections
     .map(
@@ -387,6 +401,18 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
         .join('')}</ul></section>`
     : '';
 
+  const peerArticles = EVERGREEN_ARTICLES.filter(
+    (a) => a.id !== article.id && a.editorialStatus !== 'draft-pending-review'
+  ).slice(0, 3);
+  const relatedNoscriptHtml = peerArticles.length
+    ? `<section><h2>More Explainers on TRENDVERSE</h2><ul>${peerArticles
+        .map(
+          (rel) =>
+            `<li><a href="/article/${encodeURIComponent(rel.slug)}">${escapeHtml(rel.title)}</a> (<a href="/search/label/${encodeURIComponent(rel.categoryName)}">${escapeHtml(rel.categoryName)}</a>)</li>`
+        )
+        .join('')}</ul></section>`
+    : '';
+
   const isDraft = article.editorialStatus === 'draft-pending-review';
   const authorType = article.authorId === 'vicky' ? 'Person' : 'Organization';
 
@@ -396,7 +422,7 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
     canonicalUrl,
     robots: isDraft ? 'noindex, follow' : 'index, follow, max-image-preview:large',
     ogType: 'article',
-    imageUrl: article.imageUrl,
+    imageUrl: resolvedImage,
     author: article.authorName || FOUNDER_BRAND_IDENTITY.founderName,
     publishedTime: article.publishedAt,
     modifiedTime: article.updatedAt,
@@ -412,6 +438,7 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
           headline: article.title,
           description,
           url: canonicalUrl,
+          image: [resolvedImage],
           datePublished: article.publishedAt,
           dateModified: article.updatedAt,
           inLanguage: 'en',
@@ -429,6 +456,7 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
               : {
                   '@type': 'Organization',
                   name: article.authorName,
+                  url: `${origin}/policy/about`,
                 },
           ...(article.reviewedBy
             ? {
@@ -443,6 +471,12 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
             '@type': 'Organization',
             '@id': `${origin}/#organization`,
             name: FOUNDER_BRAND_IDENTITY.brandName,
+            logo: {
+              '@type': 'ImageObject',
+              url: `${origin}/logo.png`,
+              width: 512,
+              height: 512,
+            },
           },
           mainEntityOfPage: {
             '@type': 'WebPage',
@@ -469,6 +503,7 @@ function buildArticleSeo(article: Article, origin: string): RouteSeoData {
           ${sectionsHtml}
           ${contextualLinksHtml}
           ${sourcesHtml}
+          ${relatedNoscriptHtml}
         </article>
         ${renderNoscriptFooterLinks()}
       </main>
@@ -490,6 +525,7 @@ function buildCategorySeo(category: CategoryInfo, origin: string, prerenderPath?
     canonicalUrl,
     robots: 'index, follow, max-image-preview:large',
     ogType: 'website',
+    imageUrl: `${origin}/og-image.png`,
     author: FOUNDER_BRAND_IDENTITY.publisherName,
     prerenderPath: prerenderPath || `/search/label/${category.bloggerLabel}`,
     jsonLd: {
@@ -523,6 +559,26 @@ function buildCategorySeo(category: CategoryInfo, origin: string, prerenderPath?
   };
 }
 
+function buildNotFoundSeo(origin: string, pathname: string): RouteSeoData {
+  const title = 'Page Not Found — TRENDVERSE';
+  const description =
+    'The requested TRENDVERSE page could not be found. Browse our editorial desks, live international news feeds, careers portal, and free utilities.';
+  return {
+    title,
+    description,
+    robots: 'noindex, follow',
+    ogType: 'website',
+    imageUrl: `${origin}/og-image.png`,
+    author: FOUNDER_BRAND_IDENTITY.publisherName,
+    prerenderPath: pathname || '/404',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': buildCoreNodes(origin, `${origin}/`, title, 'WebPage'),
+    },
+    noscriptHtml: `<main><h1>Page Not Found</h1><p>${escapeHtml(description)}</p>${renderNoscriptFooterLinks()}</main>`,
+  };
+}
+
 export function resolveRouteSeo(
   rawPathname: string,
   rawSearch = '',
@@ -535,7 +591,7 @@ export function resolveRouteSeo(
     Boolean(rawSearch && rawSearch.length > 1) &&
     /(^\?|&)(q|query|s)=/i.test(rawSearch);
 
-  // Explicit search query URLs (?q=...) should remain noindex, follow
+  // Explicit search query URLs (?q=..., ?query=..., ?s=...) should remain noindex, follow
   if (hasSearchQuery || (parts[0] === 'search' && parts[1] !== 'label')) {
     const homeSeo = resolveRouteSeo('/', '', env);
     return {
@@ -545,28 +601,34 @@ export function resolveRouteSeo(
   }
 
   // Article pages
-  if (parts[0] === 'article' && parts[1]) {
-    const slug = decodeURIComponent(parts[1]);
-    const article = getArticleBySlug(slug, EVERGREEN_ARTICLES);
-    if (article) return buildArticleSeo(article, origin);
+  if (parts[0] === 'article') {
+    if (parts[1]) {
+      const slug = decodeURIComponent(parts[1]);
+      const article = getArticleBySlug(slug, EVERGREEN_ARTICLES);
+      if (article) return buildArticleSeo(article, origin);
+    }
+    return buildNotFoundSeo(origin, pathname);
   }
 
   // Category pages (/search/label/<Label> or /category/<slug>)
   if (parts[0] === 'search' && parts[1] === 'label' && parts[2]) {
     const decoded = decodeURIComponent(parts.slice(2).join('/')).toLowerCase();
-    const cat =
-      EDITORIAL_CATEGORIES.find(
-        (c) =>
-          c.bloggerLabel.toLowerCase() === decoded ||
-          c.name.toLowerCase() === decoded ||
-          c.slug === decoded
-      ) || EDITORIAL_CATEGORIES[0];
-    return buildCategorySeo(cat, origin, `/search/label/${parts.slice(2).join('/')}`);
+    const cat = EDITORIAL_CATEGORIES.find(
+      (c) =>
+        c.bloggerLabel.toLowerCase() === decoded ||
+        c.name.toLowerCase() === decoded ||
+        c.slug === decoded
+    );
+    if (cat) return buildCategorySeo(cat, origin, `/search/label/${parts.slice(2).join('/')}`);
+    return buildNotFoundSeo(origin, pathname);
   }
 
-  if (parts[0] === 'category' && parts[1]) {
-    const cat = getCategoryBySlug(decodeURIComponent(parts[1]).toLowerCase());
-    if (cat) return buildCategorySeo(cat, origin, `/category/${cat.slug}`);
+  if (parts[0] === 'category') {
+    if (parts[1]) {
+      const cat = getCategoryBySlug(decodeURIComponent(parts[1]).toLowerCase());
+      if (cat) return buildCategorySeo(cat, origin, `/category/${cat.slug}`);
+    }
+    return buildNotFoundSeo(origin, pathname);
   }
 
   // Tools pages (/tools and /tools/<id>)
@@ -920,7 +982,11 @@ export function resolveRouteSeo(
     };
   }
 
-  // Default: Homepage ("/")
+  // Explicitly serve Homepage ("/") only for "/" root path; unknown paths receive noindex, follow
+  if (pathname !== '/') {
+    return buildNotFoundSeo(origin, pathname);
+  }
+
   const canonicalUrl = `${origin}/`;
   const title = "TRENDVERSE — Discover What's Next | International Media & Tools";
   const description =
@@ -941,6 +1007,7 @@ export function resolveRouteSeo(
     canonicalUrl,
     robots: 'index, follow, max-image-preview:large',
     ogType: 'website',
+    imageUrl: `${origin}/og-image.png`,
     author: `${FOUNDER_BRAND_IDENTITY.founderName} — Founder & Developer, TRENDVERSE`,
     prerenderPath: '/',
     jsonLd: {
@@ -974,6 +1041,7 @@ export function getIndexableSitemapEntries(
 ): SitemapEntry[] {
   const origin = resolveSiteOrigin(env);
   const todayIso = new Date().toISOString().slice(0, 10);
+  const staticReleaseIso = '2026-11-25';
 
   const entries: SitemapEntry[] = [
     { loc: `${origin}/`, lastmod: todayIso, changefreq: 'daily', priority: '1.0' },
@@ -985,9 +1053,10 @@ export function getIndexableSitemapEntries(
 
   // Careers portal & sub-tabs
   for (const c of CAREERS_TAB_SEO) {
+    const isLiveFeedTab = c.tab === 'overview' || c.tab === 'jobs' || c.tab === 'scholarships';
     entries.push({
       loc: `${origin}${c.path}`,
-      lastmod: todayIso,
+      lastmod: isLiveFeedTab ? todayIso : staticReleaseIso,
       changefreq: c.tab === 'overview' || c.tab === 'jobs' ? 'daily' : 'weekly',
       priority: c.tab === 'overview' ? '0.9' : '0.8',
     });
@@ -996,14 +1065,14 @@ export function getIndexableSitemapEntries(
   // Tools hub & individual utilities
   entries.push({
     loc: `${origin}/tools`,
-    lastmod: todayIso,
+    lastmod: staticReleaseIso,
     changefreq: 'monthly',
     priority: '0.8',
   });
   for (const tool of TOOL_SEO_ITEMS) {
     entries.push({
       loc: `${origin}/tools/${tool.id}`,
-      lastmod: todayIso,
+      lastmod: staticReleaseIso,
       changefreq: 'monthly',
       priority: '0.7',
     });
@@ -1013,7 +1082,7 @@ export function getIndexableSitemapEntries(
   for (const cat of EDITORIAL_CATEGORIES) {
     entries.push({
       loc: `${origin}/search/label/${encodeURIComponent(cat.bloggerLabel)}`,
-      lastmod: todayIso,
+      lastmod: '2026-11-24',
       changefreq: 'weekly',
       priority: '0.8',
     });
@@ -1024,7 +1093,7 @@ export function getIndexableSitemapEntries(
     if (article.editorialStatus === 'draft-pending-review') continue;
     entries.push({
       loc: `${origin}/article/${encodeURIComponent(article.slug)}`,
-      lastmod: article.updatedAt || article.publishedAt || todayIso,
+      lastmod: article.updatedAt || article.publishedAt || staticReleaseIso,
       changefreq: 'monthly',
       priority: article.featured ? '0.9' : '0.8',
     });
@@ -1034,7 +1103,7 @@ export function getIndexableSitemapEntries(
   for (const pageId of Object.keys(POLICY_PAGES) as PolicyPageId[]) {
     entries.push({
       loc: `${origin}/policy/${pageId}`,
-      lastmod: '2026-11-24',
+      lastmod: pageId === 'privacy-policy' ? '2026-11-25' : '2026-11-24',
       changefreq: 'monthly',
       priority: '0.5',
     });
@@ -1106,6 +1175,7 @@ Allow: /search/label/
 Disallow: /api/
 Disallow: /*?q=
 Disallow: /*?query=
+Disallow: /*?s=
 Disallow: /search?
 
 Sitemap: ${origin}/sitemap.xml
@@ -1133,6 +1203,7 @@ export function injectSeoIntoHtml(
   search = '',
   env: Record<string, string | undefined> = process.env
 ): string {
+  const origin = resolveSiteOrigin(env);
   const seo = resolveRouteSeo(pathname, search, env);
   const gscToken = (env.VITE_GSC_VERIFICATION || env.GSC_VERIFICATION || '').trim();
   const bingToken = (env.VITE_BING_VERIFICATION || env.BING_VERIFICATION || '').trim();
@@ -1166,26 +1237,28 @@ export function injectSeoIntoHtml(
           .join('\n')
       : '';
 
+  const ogImageUrl = seo.imageUrl || `${origin}/og-image.png`;
+  const ogUrl = seo.canonicalUrl || `${origin}${pathname === '/' ? '/' : pathname}`;
+
   const routeMetaBlock = `
     <title>${escapeHtml(seo.title)}</title>
     <meta name="description" content="${escapeHtml(seo.description)}" />
     <meta name="robots" content="${escapeHtml(seo.robots)}" />
-    <meta name="author" content="${escapeHtml(seo.author)}" />
-    <link rel="canonical" href="${escapeHtml(seo.canonicalUrl)}" />
+    <meta name="author" content="${escapeHtml(seo.author)}" />${
+      seo.canonicalUrl ? `\n    <link rel="canonical" href="${escapeHtml(seo.canonicalUrl)}" />` : ''
+    }
     <meta property="og:type" content="${seo.ogType}" />
     <meta property="og:site_name" content="TRENDVERSE" />
     <meta property="og:title" content="${escapeHtml(seo.title)}" />
     <meta property="og:description" content="${escapeHtml(seo.description)}" />
-    <meta property="og:url" content="${escapeHtml(seo.canonicalUrl)}" />
-    <meta property="og:locale" content="en_US" />${
-      seo.imageUrl ? `\n    <meta property="og:image" content="${escapeHtml(seo.imageUrl)}" />` : ''
-    }
-    <meta name="twitter:card" content="${seo.imageUrl ? 'summary_large_image' : 'summary'}" />
+    <meta property="og:url" content="${escapeHtml(ogUrl)}" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="${escapeHtml(ogImageUrl)}" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(seo.title)}" />
     <meta name="twitter:description" content="${escapeHtml(seo.description)}" />
-    <meta name="twitter:url" content="${escapeHtml(seo.canonicalUrl)}" />${
-      seo.imageUrl ? `\n    <meta name="twitter:image" content="${escapeHtml(seo.imageUrl)}" />` : ''
-    }
+    <meta name="twitter:url" content="${escapeHtml(ogUrl)}" />
+    <meta name="twitter:image" content="${escapeHtml(ogImageUrl)}" />
 ${articleMetaTags}${verificationTags ? `\n${verificationTags}` : ''}
     <script type="application/ld+json" id="trendverse-route-schema">${JSON.stringify(seo.jsonLd)}</script>
   `.trim();

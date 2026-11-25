@@ -106,6 +106,7 @@ function applyCorsHeaders(req: ApiRequest, res: ApiResponse, allowMethods: strin
   res.setHeader('Access-Control-Allow-Methods', allowMethods);
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
   res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
 }
 
 function applyCacheControl(res: ApiResponse, directive: string, cdnDirective?: string): void {

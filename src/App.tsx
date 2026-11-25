@@ -34,6 +34,7 @@ import {
   applySeoForCategory,
   applySeoForHome,
   applySeoForNewsCenter,
+  applySeoForNotFound,
   applySeoForPolicy,
   applySeoForTools,
   applySeoForTrendBattle,
@@ -173,11 +174,12 @@ function parseCurrentRoute(): AppRoute {
 
     if (parts[0] === 'category' && parts[1]) {
       const cat = getCategoryBySlug(decodeURIComponent(parts[1]).toLowerCase());
-      return cat ? { view: 'category', slug: cat.slug } : { view: 'home' };
+      return cat ? { view: 'category', slug: cat.slug } : { view: 'not-found', attemptedPath: pathname };
     }
 
-    if (parts[0] === 'article' && parts[1]) {
-      return { view: 'article', slug: decodeURIComponent(parts[1]) };
+    if (parts[0] === 'article') {
+      if (parts[1]) return { view: 'article', slug: decodeURIComponent(parts[1]) };
+      return { view: 'not-found', attemptedPath: pathname };
     }
 
     if (parts[0] === 'tools') {
@@ -197,6 +199,8 @@ function parseCurrentRoute(): AppRoute {
     if (parts[0] === 'ai-center') return { view: 'ai-center' };
     if (parts[0] === 'news-center') return { view: 'news-center' };
     if (parts[0] === 'blogger-theme') return { view: 'blogger-hub' };
+
+    return { view: 'not-found', attemptedPath: pathname };
   }
 
   // 2. Legacy Hash Route Support (never falls back to any category on empty/unknown hash)
@@ -444,11 +448,13 @@ export default function App() {
   useEffect(() => {
     if (route.view === 'home') applySeoForHome();
     else if (route.view === 'article') {
-      const found = findArticleBySlug(route.slug, articles) || articles[0];
+      const found = findArticleBySlug(route.slug, articles);
       if (found) applySeoForArticle(found);
+      else applySeoForNotFound();
     } else if (route.view === 'category') {
       const cat = getCategoryBySlug(route.slug);
       if (cat) applySeoForCategory(cat);
+      else applySeoForNotFound();
     } else if (route.view === 'tools') applySeoForTools(route.toolId);
     else if (route.view === 'policy') applySeoForPolicy(route.pageId);
     else if (route.view === 'blogger-hub') applySeoForBloggerHub();
@@ -458,6 +464,7 @@ export default function App() {
     else if (route.view === 'trend-battle') applySeoForTrendBattle();
     else if (route.view === 'whats-new') applySeoForWhatsNew();
     else if (route.view === 'careers') applySeoForCareers(route.tab);
+    else if (route.view === 'not-found') applySeoForNotFound();
 
     trackSpaPageView(route.view);
   }, [route, articles]);
@@ -693,7 +700,7 @@ export default function App() {
 
   const publicArticles = articles.filter((a) => a.editorialStatus !== 'draft-pending-review');
   const activeArticle =
-    route.view === 'article' ? findArticleBySlug(route.slug, articles) || publicArticles[0] || articles[0] : null;
+    route.view === 'article' ? findArticleBySlug(route.slug, articles) ?? null : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-900">
@@ -860,6 +867,55 @@ export default function App() {
             allArticles={publicArticles}
             onNavigate={navigate}
           />
+        )}
+
+        {(route.view === 'not-found' || (route.view === 'article' && !activeArticle)) && (
+          <section className="mx-auto max-w-[820px] px-4 sm:px-6 py-16">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-700 mb-2">
+                Page Not Available (Noindex)
+              </p>
+              <h1 className="font-display text-3xl font-semibold text-slate-900">
+                Requested Page Not Found
+              </h1>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                The URL you requested is not an active canonical article or section on TRENDVERSE.
+                Explore our main newsroom or curated editorial desks below.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3 text-xs font-semibold">
+                <a
+                  href="/"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate({ view: 'home' });
+                  }}
+                  className="rounded-lg bg-[#0b1324] px-4 py-2 text-white hover:bg-slate-800"
+                >
+                  Return to Home Newsroom
+                </a>
+                <a
+                  href="/news-center"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate({ view: 'news-center' });
+                  }}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-800 hover:border-blue-500"
+                >
+                  Live Global News Center
+                </a>
+                <a
+                  href="/policy/about"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate({ view: 'policy', pageId: 'about' });
+                  }}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-800 hover:border-blue-500"
+                >
+                  About TRENDVERSE
+                </a>
+              </div>
+            </div>
+          </section>
         )}
 
         {route.view === 'category' && (

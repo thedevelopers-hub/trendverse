@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppRoute, PolicyPageId } from '../types/editorial';
 import { EDITORIAL_CATEGORIES } from '../data/categories';
+import { FOUNDER_BRAND_IDENTITY } from '../data/brandIdentity';
 import { routeToUrl } from '../utils/routes';
 import { openConsentPreferences } from '../utils/consent';
 
@@ -45,7 +46,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               and browser-local tools. Founded and developed by <strong className="text-white">Vicky</strong>.
             </p>
             <p className="mt-2 text-xs text-slate-400">
-              Publisher: <span className="text-slate-200">TRENDVERSE Editorial Team</span>
+              Publisher: <span className="text-slate-200">{FOUNDER_BRAND_IDENTITY.publisherName}</span>
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Editorial Desk:{' '}
+              <a
+                href={`mailto:${FOUNDER_BRAND_IDENTITY.contactEmail}`}
+                className="text-slate-200 hover:text-white underline underline-offset-2"
+              >
+                {FOUNDER_BRAND_IDENTITY.contactEmail}
+              </a>
             </p>
           </div>
 
@@ -78,6 +88,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <ul className="space-y-2.5 text-sm">
               {(
                 [
+                  { label: 'Live News Center', route: { view: 'news-center' } },
+                  { label: 'AI Intelligence Center', route: { view: 'ai-center' } },
                   { label: 'Careers Portal', route: { view: 'careers', tab: 'overview' } },
                   { label: 'Student Internships', route: { view: 'careers', tab: 'internships' } },
                   { label: 'Scholarships', route: { view: 'careers', tab: 'scholarships' } },
@@ -85,7 +97,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   { label: 'Career & Resume Tools', route: { view: 'careers', tab: 'tools' } },
                   { label: '60s Briefing & Battle', route: { view: 'briefing' } },
                   { label: 'Free Online Tools', route: { view: 'tools', toolId: 'word-counter' } },
-                  { label: 'Blogger XML Theme', route: { view: 'blogger-hub' } },
                 ] as Array<{ label: string; route: AppRoute }>
               ).map((item) => (
                 <li key={item.label}>

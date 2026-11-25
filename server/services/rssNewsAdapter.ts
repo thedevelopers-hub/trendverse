@@ -273,13 +273,15 @@ function extractEntryUrl(rawLink: unknown): string {
 
 function deduplicateItems(items: LiveNewsItem[]): { unique: LiveNewsItem[]; duplicatesRemoved: number } {
   const seenUrls = new Set<string>();
+  const seenExactTitles = new Set<string>();
   const seenTokenSets: Set<string>[] = [];
   const unique: LiveNewsItem[] = [];
   let duplicatesRemoved = 0;
 
   for (const item of items) {
     const cleanUrl = canonicalizeArticleUrl(item.url);
-    if (seenUrls.has(cleanUrl)) {
+    const exactTitleKey = item.title.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (seenUrls.has(cleanUrl) || seenExactTitles.has(exactTitleKey)) {
       duplicatesRemoved++;
       continue;
     }
@@ -290,6 +292,7 @@ function deduplicateItems(items: LiveNewsItem[]): { unique: LiveNewsItem[]; dupl
       continue;
     }
     seenUrls.add(cleanUrl);
+    seenExactTitles.add(exactTitleKey);
     seenTokenSets.push(tokens);
     unique.push(item);
   }
@@ -347,7 +350,7 @@ async function fetchSingleSource(source: FeedSourceConfig): Promise<LiveNewsItem
         if (!rawDateValue) return null;
         const rawDate = String(rawDateValue).trim();
         const parsedTime = Date.parse(rawDate);
-        if (Number.isNaN(parsedTime)) return null;
+        if (Number.isNaN(parsedTime) || parsedTime > nowMs + 24 * 60 * 60 * 1000) return null;
 
         const publishedIso = new Date(parsedTime).toISOString();
         const isBreakingEligible =

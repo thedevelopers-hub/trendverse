@@ -135,6 +135,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ slug, articles, onNa
                     <a
                       href={articleUrl}
                       onClick={(e) => handleSpaNav(e, { view: 'article', slug: article.slug })}
+                      aria-label={`Read explainer: ${article.title}`}
                       className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 cursor-pointer"
                     >
                       <span>Read explainer</span>
@@ -145,6 +146,42 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ slug, articles, onNa
               );
             })}
           </div>
+        )}
+
+        {articles.filter((a) => a.category !== category.slug).length > 0 && categoryArticles.length < 3 && (
+          <section className="mt-10 rounded-xl border border-slate-200 bg-white p-6">
+            <h2 className="font-display text-lg font-semibold text-slate-900 mb-4">
+              Related Explainers Across Other Desks
+            </h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {articles
+                .filter((a) => a.category !== category.slug)
+                .slice(0, 3)
+                .map((rel) => {
+                  const relUrl = routeToUrl({ view: 'article', slug: rel.slug });
+                  return (
+                    <div key={rel.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                      <a
+                        href={routeToUrl({ view: 'category', slug: rel.category })}
+                        onClick={(e) => handleSpaNav(e, { view: 'category', slug: rel.category }, true)}
+                        className="text-xs font-semibold text-blue-700 hover:underline"
+                      >
+                        {rel.categoryName}
+                      </a>
+                      <h3 className="mt-1 font-display text-base font-semibold text-slate-900">
+                        <a
+                          href={relUrl}
+                          onClick={(e) => handleSpaNav(e, { view: 'article', slug: rel.slug })}
+                          className="hover:text-blue-600"
+                        >
+                          {rel.title}
+                        </a>
+                      </h3>
+                    </div>
+                  );
+                })}
+            </div>
+          </section>
         )}
 
         <section className="mt-10 rounded-xl border border-slate-200 bg-slate-50 p-6">

@@ -54,5 +54,7 @@ export function routeToUrl(route: AppRoute): string {
       return '/blogger-theme';
     case 'policy':
       return `/policy/${encodeURIComponent(route.pageId)}`;
+    case 'not-found':
+      return route.attemptedPath || '/404';
   }
 }

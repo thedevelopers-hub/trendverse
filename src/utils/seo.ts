@@ -34,6 +34,11 @@ function upsertCanonical(url: string): void {
   link.setAttribute('href', url);
 }
 
+function removeCanonical(): void {
+  const link = document.querySelector('link[rel="canonical"]');
+  if (link) link.remove();
+}
+
 function truncateWordBoundary(text: string, maxLen = 158): string {
   const clean = text.replace(/\s+/g, ' ').trim();
   if (clean.length <= maxLen) return clean;
@@ -70,6 +75,8 @@ function applySharedSocialTags(opts: {
   modifiedTime?: string;
   articleSection?: string;
 }): void {
+  const origin = getCanonicalOrigin();
+  const resolvedImage = opts.imageUrl || `${origin}/og-image.png`;
   upsertMeta('name', 'description', opts.description);
   upsertMeta('name', 'author', opts.author || FOUNDER_BRAND_IDENTITY.founderName);
   upsertMeta('property', 'og:type', opts.ogType);
@@ -78,17 +85,12 @@ function applySharedSocialTags(opts: {
   upsertMeta('property', 'og:description', opts.description);
   upsertMeta('property', 'og:url', opts.url);
   upsertMeta('property', 'og:locale', 'en_US');
-  upsertMeta('name', 'twitter:card', opts.imageUrl ? 'summary_large_image' : 'summary');
+  upsertMeta('name', 'twitter:card', 'summary_large_image');
   upsertMeta('name', 'twitter:title', opts.title);
   upsertMeta('name', 'twitter:description', opts.description);
   upsertMeta('name', 'twitter:url', opts.url);
-  if (opts.imageUrl) {
-    upsertMeta('property', 'og:image', opts.imageUrl);
-    upsertMeta('name', 'twitter:image', opts.imageUrl);
-  } else {
-    removeMeta('property', 'og:image');
-    removeMeta('name', 'twitter:image');
-  }
+  upsertMeta('property', 'og:image', resolvedImage);
+  upsertMeta('name', 'twitter:image', resolvedImage);
 
   if (opts.ogType === 'article') {
     if (opts.publishedTime) upsertMeta('property', 'article:published_time', opts.publishedTime);
@@ -123,6 +125,60 @@ function setRouteJsonLd(data: Record<string, unknown> | null): void {
   }
 }
 
+export function syncLiveNewsSchema(
+  items: Array<{
+    headline: string;
+    url: string;
+    datePublished: string;
+    publisher: string;
+    section?: string;
+    description?: string;
+  }> | null
+): void {
+  const existing = document.getElementById('trendverse-live-news-schema');
+  if (!items || items.length === 0) {
+    if (existing) existing.remove();
+    return;
+  }
+  const origin = getCanonicalOrigin();
+  const payload = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Verified International News Dispatches',
+    itemListElement: items.slice(0, 12).map((item, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      item: {
+        '@type': 'NewsArticle',
+        headline: item.headline,
+        url: item.url,
+        datePublished: item.datePublished,
+        inLanguage: 'en',
+        isAccessibleForFree: true,
+        ...(item.section ? { articleSection: item.section } : {}),
+        ...(item.description ? { description: truncateWordBoundary(item.description, 158) } : {}),
+        publisher: {
+          '@type': 'Organization',
+          name: item.publisher,
+          ...(item.publisher.includes('TRENDVERSE')
+            ? {
+                '@id': `${origin}/#organization`,
+                logo: { '@type': 'ImageObject', url: `${origin}/logo.png`, width: 512, height: 512 },
+              }
+            : {}),
+        },
+      },
+    })),
+  };
+  const script = existing ?? document.createElement('script');
+  script.id = 'trendverse-live-news-schema';
+  script.setAttribute('type', 'application/ld+json');
+  script.textContent = JSON.stringify(payload);
+  if (!existing) {
+    document.head.appendChild(script);
+  }
+}
+
 function buildCoreGraphNodes(
   origin: string,
   pageUrl: string,
@@ -134,19 +190,30 @@ function buildCoreGraphNodes(
       '@type': 'Person',
       '@id': `${origin}/#founder-vicky`,
       name: FOUNDER_BRAND_IDENTITY.founderName,
-      jobTitle: 'Founder & Developer',
-      description: 'Founder and Developer of TRENDVERSE.',
+      jobTitle: 'Founder, Developer & Managing Editor',
+      description: 'Founder, Developer, and Managing Editor of TRENDVERSE.',
       worksFor: { '@id': `${origin}/#organization` },
     },
     {
       '@type': 'Organization',
       '@id': `${origin}/#organization`,
       name: FOUNDER_BRAND_IDENTITY.brandName,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${origin}/logo.png`,
+        width: 512,
+        height: 512,
+      },
       slogan: FOUNDER_BRAND_IDENTITY.tagline,
       url: `${origin}/`,
       description:
         "Discover What's Next. An independent global digital media, live trend intelligence, careers, and free utilities platform founded and developed by Vicky.",
       founder: { '@id': `${origin}/#founder-vicky` },
+      publishingPrinciples: `${origin}/policy/editorial-policy`,
+      correctionsPolicy: `${origin}/policy/corrections-policy`,
+      actionableFeedbackPolicy: `${origin}/policy/contact`,
+      masthead: `${origin}/policy/about`,
+      ownershipFundingInfo: `${origin}/policy/about`,
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'editorial',
@@ -216,6 +283,7 @@ export function applySeoForArticle(article: Article): void {
 
   const isDraft = article.editorialStatus === 'draft-pending-review';
   const authorType = article.authorId === 'vicky' ? 'Person' : 'Organization';
+  const resolvedImage = article.imageUrl || `${origin}/og-image.png`;
 
   document.title = title;
   upsertRobots(isDraft ? 'noindex, follow' : 'index, follow, max-image-preview:large');
@@ -224,7 +292,7 @@ export function applySeoForArticle(article: Article): void {
     description: desc,
     url: canonicalUrl,
     ogType: 'article',
-    imageUrl: article.imageUrl,
+    imageUrl: resolvedImage,
     author: article.authorName || FOUNDER_BRAND_IDENTITY.founderName,
     publishedTime: article.publishedAt,
     modifiedTime: article.updatedAt,
@@ -242,6 +310,7 @@ export function applySeoForArticle(article: Article): void {
         headline: article.title,
         description: desc,
         url: canonicalUrl,
+        image: [resolvedImage],
         datePublished: article.publishedAt,
         dateModified: article.updatedAt,
         inLanguage: 'en',
@@ -259,6 +328,7 @@ export function applySeoForArticle(article: Article): void {
             : {
                 '@type': 'Organization',
                 name: article.authorName,
+                url: `${origin}/policy/about`,
               },
         ...(article.reviewedBy
           ? {
@@ -273,6 +343,12 @@ export function applySeoForArticle(article: Article): void {
           '@type': 'Organization',
           '@id': `${origin}/#organization`,
           name: FOUNDER_BRAND_IDENTITY.brandName,
+          logo: {
+            '@type': 'ImageObject',
+            url: `${origin}/logo.png`,
+            width: 512,
+            height: 512,
+          },
         },
         mainEntityOfPage: {
           '@type': 'WebPage',
@@ -700,4 +776,26 @@ export function applySeoForCareers(tab: string): void {
       ],
     });
   }
+}
+
+export function applySeoForNotFound(): void {
+  const title = 'Page Not Found — TRENDVERSE';
+  const desc =
+    'The requested TRENDVERSE page could not be found. Explore our editorial desks, live news center, careers portal, and free tools.';
+  const origin = getCanonicalOrigin();
+
+  document.title = title;
+  upsertRobots('noindex, follow');
+  removeCanonical();
+  applySharedSocialTags({
+    title,
+    description: desc,
+    url: `${origin}/`,
+    ogType: 'website',
+    author: FOUNDER_BRAND_IDENTITY.publisherName,
+  });
+  setRouteJsonLd({
+    '@context': 'https://schema.org',
+    '@graph': buildCoreGraphNodes(origin, `${origin}/`, title),
+  });
 }
